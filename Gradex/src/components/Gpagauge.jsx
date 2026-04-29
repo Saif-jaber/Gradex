@@ -16,13 +16,12 @@ const GpaGauge = ({
   gpa = 3.5,
   maxGpa = 4.0,
   degreeProgress = 72,
-  standing = "Honor",
 }) => {
   const cx = 110;
-  const cy = 105;
+  const cy = 110;
   const r = 78;
-  const startAngle = -210;
-  const endAngle = 30;
+  const startAngle = -90;
+  const endAngle = 90;
   const fillAngle = startAngle + (gpa / maxGpa) * (endAngle - startAngle);
 
   const trackPath = describeArc(cx, cy, r, startAngle, endAngle);
@@ -44,7 +43,7 @@ const GpaGauge = ({
         <svg
           width="220"
           height="145"
-          viewBox="0 0 220 145"
+          viewBox="0 0 220 155"
           aria-label={`GPA gauge showing ${gpa} out of ${maxGpa}`}
         >
           {/* Track arc */}
@@ -115,11 +114,6 @@ const GpaGauge = ({
         <div className="flex flex-col items-center gap-0.5">
           <span className="text-xl font-semibold text-white">{degreeProgress}%</span>
           <span className="text-[11px] text-gray-500">Degree progress</span>
-        </div>
-        <div style={{ width: "1px", background: "rgba(255,255,255,0.07)" }} />
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="text-xl font-semibold text-white">{standing}</span>
-          <span className="text-[11px] text-gray-500">Standing</span>
         </div>
       </div>
     </div>

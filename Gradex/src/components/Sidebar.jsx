@@ -7,6 +7,7 @@ import {
   PlusSquare,
   BookPlus,
   Settings,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -24,30 +25,46 @@ const NAV_ITEMS = [
   },
   {
     id: "semesters",
-    path: "/semesters",
+    path: "/",
+    scrollId: "semesters-section",
     icon: <CalendarDays size={18} />,
     label: "Semesters",
     section: null,
   },
   {
     id: "courses",
-    path: "/courses",
+    path: "/",
+    scrollId: "semesters-section",
     icon: <BookOpen size={18} />,
     label: "Courses",
     section: null,
   },
   {
     id: "add-semester",
-    path: "/add-semester",
+    popup: "addSemester",
     icon: <PlusSquare size={18} />,
     label: "Add Semester",
     section: "Functions",
   },
   {
     id: "add-course",
-    path: "/add-course",
+    popup: "addCourse",
     icon: <BookPlus size={18} />,
     label: "Add Course",
+    section: null,
+  },
+  {
+    id: "delete-semester",
+    popup: "deleteSemester",
+    icon: <Trash2 size={18} />,
+    label: "Delete Semester",
+    section: null,
+  },
+  {
+    id: "delete-course",
+    popup: "deleteCourse",
+    icon: <Trash2 size={18} />,
+    label: "Delete Course",
     section: null,
   },
   {
@@ -59,22 +76,28 @@ const NAV_ITEMS = [
   },
 ];
 
-const SidebarItem = ({ icon, label, collapsed, isActive, onClick }) => {
+const SidebarItem = ({ icon, label, collapsed, isActive, isFlashed, onClick }) => {
+  const active = isActive || isFlashed;
   return (
     <button
       onClick={onClick}
       style={
-        isActive
-          ? { backgroundColor: "rgba(242, 49, 49, 0.08)", color: BRAND_RED }
+        active
+          ? {
+              backgroundColor: isFlashed ? undefined : "rgba(242, 49, 49, 0.08)",
+              color: BRAND_RED,
+              transition: "background-color 0.3s ease-out, color 0.3s ease-out",
+            }
           : {}
       }
       className={`
         relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-left
-        ${isActive ? "" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}
+        ${active ? "" : "text-gray-400 hover:bg-white/5 hover:text-gray-200"}
+        ${isFlashed ? "animate-flash" : ""}
       `}
     >
       {/* Left accent bar */}
-      {isActive && (
+      {active && (
         <span
           style={{ backgroundColor: BRAND_RED }}
           className="absolute left-0 top-[20%] h-[60%] w-[3px] rounded-r-full"
@@ -83,8 +106,8 @@ const SidebarItem = ({ icon, label, collapsed, isActive, onClick }) => {
 
       {/* Icon */}
       <span
-        style={isActive ? { color: BRAND_RED } : {}}
-        className={`shrink-0 ${!isActive ? "text-gray-400" : ""}`}
+        style={active ? { color: BRAND_RED } : {}}
+        className={`shrink-0 ${!active ? "text-gray-400" : ""}`}
       >
         {icon}
       </span>
@@ -147,14 +170,33 @@ const LogoutButton = ({ collapsed }) => {
   );
 };
 
-const Sidebar = ({ collapsed, setCollapsed }) => {
+const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, onOpenDeleteSemester, onOpenDeleteCourse }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [flashId, setFlashId] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const popupOpeners = {
+    addSemester: onOpenAddSemester,
+    addCourse: onOpenAddCourse,
+    deleteSemester: onOpenDeleteSemester,
+    deleteCourse: onOpenDeleteCourse,
+  };
 
   const handleNavClick = (path) => {
     navigate(path);
     setMobileOpen(false);
+  };
+
+  const handleScrollClick = (itemId, scrollId) => {
+    navigate("/");
+    setMobileOpen(false);
+    setFlashId(itemId);
+    setTimeout(() => setFlashId(null), 400);
+    setTimeout(() => {
+      const el = document.getElementById(scrollId);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
   return (
@@ -181,7 +223,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       {/* SIDEBAR */}
       <aside
         className={`
-          fixed md:static top-0 left-0 z-50
+          fixed md:sticky md:top-0 md:h-screen top-0 left-0 z-50
           h-screen bg-black/85 backdrop-blur-md
           border-r border-white/10 text-white
           transition-all duration-300
@@ -236,8 +278,17 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
                 icon={item.icon}
                 label={item.label}
                 collapsed={collapsed}
-                isActive={location.pathname === item.path}
-                onClick={() => handleNavClick(item.path)}
+                isActive={!item.scrollId && !item.popup && location.pathname === item.path}
+                isFlashed={!!item.scrollId && flashId === item.id}
+                onClick={() => {
+                  if (item.popup) {
+                    popupOpeners[item.popup]?.();
+                  } else if (item.scrollId) {
+                    handleScrollClick(item.id, item.scrollId);
+                  } else {
+                    handleNavClick(item.path);
+                  }
+                }}
               />
             </div>
           ))}

@@ -55,6 +55,16 @@
 
 body {
   margin: 0;
+  padding: 0;
+}
+
+@keyframes flashPulse {
+  0%   { background-color: rgba(242, 49, 49, 0.15); }
+  100% { background-color: transparent; }
+}
+
+.animate-flash {
+  animation: flashPulse 0.4s ease-out forwards;
 }
 
 #root {
