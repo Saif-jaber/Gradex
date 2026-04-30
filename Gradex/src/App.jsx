@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import SettingsPage from "./pages/Settings";
 import AddSemesterPopup from "./components/Addsemesterpopup";
@@ -97,57 +98,60 @@ const App = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#111111]">
-      <Sidebar
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-        onOpenAddSemester={() => setShowAddSemester(true)}
-        onOpenAddCourse={() => setShowAddCourse(true)}
-        onOpenDeleteSemester={() => setShowDeleteSemester(true)}
-        onOpenDeleteCourse={() => setShowDeleteCourse(true)}
-      />
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/dashboard" element={
+        <div className="flex h-screen w-full bg-[#111111]">
+          <Sidebar
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+            onOpenAddSemester={() => setShowAddSemester(true)}
+            onOpenAddCourse={() => setShowAddCourse(true)}
+            onOpenDeleteSemester={() => setShowDeleteSemester(true)}
+            onOpenDeleteCourse={() => setShowDeleteCourse(true)}
+          />
 
-      <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
-        <Routes>
-          <Route path="/"             element={<Dashboard semesters={semesters} academic={academic} />} />
-          <Route path="/semesters"    element={<Semesters />} />
-          <Route path="/courses"      element={<Courses />} />
-          <Route path="/add-semester" element={<AddSemester />} />
-          <Route path="/add-course"   element={<AddCourse />} />
-          <Route path="/settings"     element={<SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />} />
-        </Routes>
-      </main>
+          <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
+            <Dashboard semesters={semesters} academic={academic} />
+          </main>
 
-      <AddSemesterPopup
-        isOpen={showAddSemester}
-        onClose={() => setShowAddSemester(false)}
-        semesters={semesters}
-        onAdd={handleAddSemester}
-        defaultCredits={academic.defaultCredits}
-      />
+          <AddSemesterPopup
+            isOpen={showAddSemester}
+            onClose={() => setShowAddSemester(false)}
+            semesters={semesters}
+            onAdd={handleAddSemester}
+            defaultCredits={academic.defaultCredits}
+          />
 
-      <AddCoursePopup
-        isOpen={showAddCourse}
-        onClose={() => setShowAddCourse(false)}
-        semesters={semesters}
-        onAdd={handleAddCourse}
-        defaultCredits={academic.defaultCredits}
-      />
+          <AddCoursePopup
+            isOpen={showAddCourse}
+            onClose={() => setShowAddCourse(false)}
+            semesters={semesters}
+            onAdd={handleAddCourse}
+            defaultCredits={academic.defaultCredits}
+          />
 
-      <DeleteSemesterPopup
-        isOpen={showDeleteSemester}
-        onClose={() => setShowDeleteSemester(false)}
-        semesters={semesters}
-        onDelete={handleDeleteSemester}
-      />
+          <DeleteSemesterPopup
+            isOpen={showDeleteSemester}
+            onClose={() => setShowDeleteSemester(false)}
+            semesters={semesters}
+            onDelete={handleDeleteSemester}
+          />
 
-      <DeleteCoursePopup
-        isOpen={showDeleteCourse}
-        onClose={() => setShowDeleteCourse(false)}
-        semesters={semesters}
-        onDelete={handleDeleteCourse}
-      />
-    </div>
+          <DeleteCoursePopup
+            isOpen={showDeleteCourse}
+            onClose={() => setShowDeleteCourse(false)}
+            semesters={semesters}
+            onDelete={handleDeleteCourse}
+          />
+        </div>
+      } />
+      <Route path="/semesters" element={<Semesters />} />
+      <Route path="/courses" element={<Courses />} />
+      <Route path="/add-semester" element={<AddSemester />} />
+      <Route path="/add-course" element={<AddCourse />} />
+      <Route path="/settings" element={<SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />} />
+    </Routes>
   );
 };
 

@@ -18,14 +18,14 @@ const BRAND_RED = "#f23131";
 const NAV_ITEMS = [
   {
     id: "dashboard",
-    path: "/",
+    path: "/dashboard",
     icon: <LayoutDashboard size={18} />,
     label: "Dashboard",
     section: null,
   },
   {
     id: "semesters",
-    path: "/",
+    path: "/dashboard",
     scrollId: "semesters-section",
     icon: <CalendarDays size={18} />,
     label: "Semesters",
@@ -33,7 +33,7 @@ const NAV_ITEMS = [
   },
   {
     id: "courses",
-    path: "/",
+    path: "/dashboard",
     scrollId: "semesters-section",
     icon: <BookOpen size={18} />,
     label: "Courses",
@@ -189,7 +189,7 @@ const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, 
   };
 
   const handleScrollClick = (itemId, scrollId) => {
-    navigate("/");
+    navigate("/dashboard");
     setMobileOpen(false);
     setFlashId(itemId);
     setTimeout(() => setFlashId(null), 400);
