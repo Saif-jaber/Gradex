@@ -130,17 +130,14 @@ const SectionDivider = ({ title }) => (
   </div>
 );
 
-const LogoutButton = ({ collapsed }) => {
+const LogoutButton = ({ collapsed, onLogout, user }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
     <button
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => {
-        // TODO: wire up your logout logic here
-        console.log("Logging out...");
-      }}
+      onClick={onLogout}
       style={{
         backgroundColor: hovered ? "rgba(242, 49, 49, 0.15)" : "transparent",
         color: hovered ? "#f23131" : "#6b7280",
@@ -164,13 +161,16 @@ const LogoutButton = ({ collapsed }) => {
       </span>
 
       {!collapsed && (
-        <span className="text-xs font-medium whitespace-nowrap">Logout</span>
+        <div className="flex flex-col items-start">
+          <span className="text-xs font-medium whitespace-nowrap">{user?.name || "User"}</span>
+          <span className="text-[10px] text-gray-500">{user?.email || ""}</span>
+        </div>
       )}
     </button>
   );
 };
 
-const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, onOpenDeleteSemester, onOpenDeleteCourse }) => {
+const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, onOpenDeleteSemester, onOpenDeleteCourse, onLogout, user }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [flashId, setFlashId] = useState(null);
   const navigate = useNavigate();
@@ -296,7 +296,7 @@ const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, 
 
         {/* LOGOUT — pinned to bottom */}
         <div className="px-3 py-4 border-t border-white/10 shrink-0">
-          <LogoutButton collapsed={collapsed} />
+          <LogoutButton collapsed={collapsed} onLogout={onLogout} user={user} />
         </div>
       </aside>
     </>

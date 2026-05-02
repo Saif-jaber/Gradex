@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { useToast } from "../context/ToastContext";
+import { authAPI } from "../services/api";
 
 const BRAND_RED = "#f23131";
 
@@ -12,6 +14,7 @@ const AuthPopup = ({ isOpen, onClose, mode = "login" }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -29,14 +32,30 @@ const AuthPopup = ({ isOpen, onClose, mode = "login" }) => {
     resetForm();
   }, [mode, isOpen]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formMode === "signup" && password !== confirmPassword) return;
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      if (formMode === "signup") {
+        const data = await authAPI.register(email, password, name);
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        addToast("Account created successfully!", "success");
+      } else {
+        const data = await authAPI.login(email, password);
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        addToast("Logged in successfully!", "success");
+      }
       setLoading(false);
       onClose();
-    }, 1500);
+      window.location.href = "/dashboard";
+    } catch (error) {
+      setLoading(false);
+      addToast(error.message || "Authentication failed", "error");
+    }
   };
 
   const resetForm = () => {

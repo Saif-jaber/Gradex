@@ -25,7 +25,7 @@ import AuthPopup from "../components/AuthPopup";
 
 const BRAND_RED = "#f23131";
 
-const LandingPage = () => {
+const LandingPage = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -143,25 +143,46 @@ const LandingPage = () => {
             <span className="text-lg font-bold tracking-tight">Gradex</span>
           </button>
           <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => scrollToSection("features")} className="text-sm text-gray-400 hover:text-white transition-colors">Features</button>
-            <button onClick={() => scrollToSection("how-it-works")} className="text-sm text-gray-400 hover:text-white transition-colors">How It Works</button>
-            <button onClick={() => scrollToSection("faq")} className="text-sm text-gray-400 hover:text-white transition-colors">FAQ</button>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setAuthMode("login")}
-                className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setAuthMode("signup")}
-                style={{ backgroundColor: BRAND_RED }}
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
-              >
-                Sign Up Free
-              </button>
-            </div>
-          </div>
+             <button onClick={() => scrollToSection("features")} className="text-sm text-gray-400 hover:text-white transition-colors">Features</button>
+             <button onClick={() => scrollToSection("how-it-works")} className="text-sm text-gray-400 hover:text-white transition-colors">How It Works</button>
+             <button onClick={() => scrollToSection("faq")} className="text-sm text-gray-400 hover:text-white transition-colors">FAQ</button>
+             <div className="flex items-center gap-3">
+               {user ? (
+                 <>
+                   <span className="text-sm text-gray-300">{user.name}</span>
+                   <button
+                     onClick={onLogout}
+                     className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors"
+                   >
+                     Logout
+                   </button>
+                   <button
+                     onClick={() => navigate("/dashboard")}
+                     style={{ backgroundColor: BRAND_RED }}
+                     className="px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+                   >
+                     Dashboard
+                   </button>
+                 </>
+               ) : (
+                 <>
+                   <button
+                     onClick={() => setAuthMode("login")}
+                     className="px-4 py-2.5 rounded-xl text-sm font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors"
+                   >
+                     Sign In
+                   </button>
+                   <button
+                     onClick={() => setAuthMode("signup")}
+                     style={{ backgroundColor: BRAND_RED }}
+                     className="px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+                   >
+                     Sign Up Free
+                   </button>
+                 </>
+               )}
+             </div>
+           </div>
           <button className="md:hidden text-white p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -171,21 +192,42 @@ const LandingPage = () => {
             <button onClick={() => scrollToSection("features")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">Features</button>
             <button onClick={() => scrollToSection("how-it-works")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">How It Works</button>
             <button onClick={() => scrollToSection("faq")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">FAQ</button>
-            <div className="pt-2 space-y-3 border-t border-white/5">
-              <button
-                onClick={() => { setAuthMode("login"); setMobileMenuOpen(false); }}
-                className="w-full px-5 py-3 rounded-xl text-sm font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => { setAuthMode("signup"); setMobileMenuOpen(false); }}
-                style={{ backgroundColor: BRAND_RED }}
-                className="w-full px-5 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
-              >
-                Sign Up Free
-              </button>
-            </div>
+               <div className="pt-2 space-y-3 border-t border-white/5">
+               {user ? (
+                 <>
+                   <div className="text-center text-sm text-gray-300 py-2">{user.name}</div>
+                   <button
+                     onClick={() => { onLogout(); setMobileMenuOpen(false); }}
+                     className="w-full px-5 py-3 rounded-xl text-sm font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors"
+                   >
+                     Logout
+                   </button>
+                   <button
+                     onClick={() => { navigate("/dashboard"); setMobileMenuOpen(false); }}
+                     style={{ backgroundColor: BRAND_RED }}
+                     className="w-full px-5 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+                   >
+                     Dashboard
+                   </button>
+                 </>
+               ) : (
+                 <>
+                   <button
+                     onClick={() => { setAuthMode("login"); setMobileMenuOpen(false); }}
+                     className="w-full px-5 py-3 rounded-xl text-sm font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors"
+                   >
+                     Sign In
+                   </button>
+                   <button
+                     onClick={() => { setAuthMode("signup"); setMobileMenuOpen(false); }}
+                     style={{ backgroundColor: BRAND_RED }}
+                     className="w-full px-5 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+                   >
+                     Sign Up Free
+                   </button>
+                 </>
+               )}
+             </div>
           </div>
         )}
       </nav>
@@ -225,22 +267,35 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-            <button
-              onClick={() => setAuthMode("signup")}
-              style={{ backgroundColor: BRAND_RED }}
-              className="px-8 py-4 rounded-xl text-base font-semibold hover:opacity-90 transition-opacity flex items-center gap-2 w-full sm:w-auto justify-center"
-            >
-              Get Started Free
-              <ArrowRight size={18} />
-            </button>
-            <button
-              onClick={() => setAuthMode("login")}
-              className="px-8 py-4 rounded-xl text-base font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors w-full sm:w-auto text-center"
-            >
-              Sign In
-            </button>
-          </div>
+           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+             {user ? (
+               <button
+                 onClick={() => navigate("/dashboard")}
+                 style={{ backgroundColor: BRAND_RED }}
+                 className="px-8 py-4 rounded-xl text-base font-semibold hover:opacity-90 transition-opacity flex items-center gap-2 w-full sm:w-auto justify-center"
+               >
+                 Go to Dashboard
+                 <ArrowRight size={18} />
+               </button>
+             ) : (
+               <>
+                 <button
+                   onClick={() => setAuthMode("signup")}
+                   style={{ backgroundColor: BRAND_RED }}
+                   className="px-8 py-4 rounded-xl text-base font-semibold hover:opacity-90 transition-opacity flex items-center gap-2 w-full sm:w-auto justify-center"
+                 >
+                   Get Started Free
+                   <ArrowRight size={18} />
+                 </button>
+                 <button
+                   onClick={() => setAuthMode("login")}
+                   className="px-8 py-4 rounded-xl text-base font-medium text-gray-300 border border-white/10 hover:bg-white/5 transition-colors w-full sm:w-auto text-center"
+                 >
+                   Sign In
+                 </button>
+               </>
+             )}
+           </div>
 
           {/* Hero dashboard mockup */}
           <div
@@ -581,14 +636,25 @@ const LandingPage = () => {
               <p className="text-gray-400 mb-8 max-w-lg text-lg">
                 Create your free account today and start tracking your GPA in minutes.
               </p>
-              <button
-                onClick={() => setAuthMode("signup")}
-                style={{ backgroundColor: BRAND_RED }}
-                className="px-7 py-3 rounded-xl text-base font-semibold hover:opacity-90 transition-opacity inline-flex items-center gap-2 mt-4"
-              >
-                Create Free Account
-                <ArrowUpRight size={18} />
-              </button>
+              {user ? (
+                 <button
+                   onClick={() => navigate("/dashboard")}
+                   style={{ backgroundColor: BRAND_RED }}
+                   className="px-7 py-3 rounded-xl text-base font-semibold hover:opacity-90 transition-opacity inline-flex items-center gap-2 mt-4"
+                 >
+                   Go to Dashboard
+                   <ArrowUpRight size={18} />
+                 </button>
+               ) : (
+                 <button
+                   onClick={() => setAuthMode("signup")}
+                   style={{ backgroundColor: BRAND_RED }}
+                   className="px-7 py-3 rounded-xl text-base font-semibold hover:opacity-90 transition-opacity inline-flex items-center gap-2 mt-4"
+                 >
+                   Create Free Account
+                   <ArrowUpRight size={18} />
+                 </button>
+               )}
             </div>
           </div>
         </div>
@@ -609,13 +675,23 @@ const LandingPage = () => {
               <button onClick={() => scrollToSection("features")} className="text-xs text-gray-500 hover:text-white transition-colors">Features</button>
               <button onClick={() => scrollToSection("how-it-works")} className="text-xs text-gray-500 hover:text-white transition-colors">How It Works</button>
               <button onClick={() => scrollToSection("faq")} className="text-xs text-gray-500 hover:text-white transition-colors">FAQ</button>
-              <button
-                onClick={() => setAuthMode("login")}
-                className="text-xs font-medium hover:text-white transition-colors"
-                style={{ color: BRAND_RED }}
-              >
-                Sign In
-              </button>
+               {user ? (
+                 <button
+                   onClick={onLogout}
+                   className="text-xs font-medium hover:text-white transition-colors"
+                   style={{ color: BRAND_RED }}
+                 >
+                   Logout
+                 </button>
+               ) : (
+                 <button
+                   onClick={() => setAuthMode("login")}
+                   className="text-xs font-medium hover:text-white transition-colors"
+                   style={{ color: BRAND_RED }}
+                 >
+                   Sign In
+                 </button>
+               )}
             </div>
             <div className="text-xs text-gray-600">
               Built for students. Free forever.

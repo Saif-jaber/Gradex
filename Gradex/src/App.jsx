@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
@@ -43,6 +43,24 @@ const App = () => {
     university: "",
     major: "",
   });
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setSemesters([]);
+    navigate("/");
+  };
 
   const handleAddSemester = (newSem) => {
     setSemesters((prev) => [...prev, newSem]);
@@ -99,52 +117,69 @@ const App = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<LandingPage user={user} onLogout={handleLogout} />} />
       <Route path="/dashboard" element={
-        <div className="flex h-screen w-full bg-[#111111]">
-          <Sidebar
-            collapsed={collapsed}
-            setCollapsed={setCollapsed}
-            onOpenAddSemester={() => setShowAddSemester(true)}
-            onOpenAddCourse={() => setShowAddCourse(true)}
-            onOpenDeleteSemester={() => setShowDeleteSemester(true)}
-            onOpenDeleteCourse={() => setShowDeleteCourse(true)}
-          />
+        user ? (
+          <div className="flex h-screen w-full bg-[#111111]">
+            <Sidebar
+              collapsed={collapsed}
+              setCollapsed={setCollapsed}
+              onOpenAddSemester={() => setShowAddSemester(true)}
+              onOpenAddCourse={() => setShowAddCourse(true)}
+              onOpenDeleteSemester={() => setShowDeleteSemester(true)}
+              onOpenDeleteCourse={() => setShowDeleteCourse(true)}
+              onLogout={handleLogout}
+              user={user}
+            />
 
-          <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
-            <Dashboard semesters={semesters} academic={academic} />
-          </main>
+            <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
+              <Dashboard semesters={semesters} academic={academic} userId={user.id} />
+            </main>
 
-          <AddSemesterPopup
-            isOpen={showAddSemester}
-            onClose={() => setShowAddSemester(false)}
-            semesters={semesters}
-            onAdd={handleAddSemester}
-            defaultCredits={academic.defaultCredits}
-          />
+            <AddSemesterPopup
+              isOpen={showAddSemester}
+              onClose={() => setShowAddSemester(false)}
+              semesters={semesters}
+              onAdd={handleAddSemester}
+              defaultCredits={academic.defaultCredits}
+            />
 
-          <AddCoursePopup
-            isOpen={showAddCourse}
-            onClose={() => setShowAddCourse(false)}
-            semesters={semesters}
-            onAdd={handleAddCourse}
-            defaultCredits={academic.defaultCredits}
-          />
+            <AddCoursePopup
+              isOpen={showAddCourse}
+              onClose={() => setShowAddCourse(false)}
+              semesters={semesters}
+              onAdd={handleAddCourse}
+              defaultCredits={academic.defaultCredits}
+            />
 
-          <DeleteSemesterPopup
-            isOpen={showDeleteSemester}
-            onClose={() => setShowDeleteSemester(false)}
-            semesters={semesters}
-            onDelete={handleDeleteSemester}
-          />
+            <DeleteSemesterPopup
+              isOpen={showDeleteSemester}
+              onClose={() => setShowDeleteSemester(false)}
+              semesters={semesters}
+              onDelete={handleDeleteSemester}
+            />
 
-          <DeleteCoursePopup
-            isOpen={showDeleteCourse}
-            onClose={() => setShowDeleteCourse(false)}
-            semesters={semesters}
-            onDelete={handleDeleteCourse}
-          />
-        </div>
+            <DeleteCoursePopup
+              isOpen={showDeleteCourse}
+              onClose={() => setShowDeleteCourse(false)}
+              semesters={semesters}
+              onDelete={handleDeleteCourse}
+            />
+          </div>
+        ) : (
+          <div className="min-h-screen bg-[#111111] flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-white mb-4">Please log in to continue</h2>
+              <button
+                onClick={() => navigate("/")}
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-white"
+                style={{ backgroundColor: "#f23131" }}
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        )
       } />
       <Route path="/semesters" element={<Semesters />} />
       <Route path="/courses" element={<Courses />} />

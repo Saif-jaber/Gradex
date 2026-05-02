@@ -1,75 +1,42 @@
+import { useState, useEffect } from "react";
+import { useToast } from "../context/ToastContext";
+import { authAPI } from "../services/api";
 import StatCard from "../components/Statcard.jsx";
 import GpaBarChart from "../components/Gpabarchart.jsx";
 import GpaGauge from "../components/Gpagauge.jsx";
 import SemesterDisplayer from "../components/Semesterdisplayer.jsx";
 
-const defaultSemesters = [
-  {
-    label: "Y1 - S1",
-    gpa: 3.0,
-    courses: [
-      { name: "Mathematics 101", credits: 3, status: "done" },
-      { name: "Physics 101", credits: 3, status: "done" },
-      { name: "English 101", credits: 3, status: "done" },
-    ],
-  },
-  {
-    label: "Y1 - S2",
-    gpa: 3.2,
-    courses: [
-      { name: "Mathematics 102", credits: 3, status: "done" },
-      { name: "Chemistry 101", credits: 3, status: "done" },
-      { name: "History 101", credits: 3, status: "done" },
-    ],
-  },
-  {
-    label: "Y2 - S1",
-    gpa: 3.3,
-    courses: [
-      { name: "Data Structures", credits: 3, status: "done" },
-      { name: "Algorithms", credits: 3, status: "done" },
-      { name: "Database Systems", credits: 3, status: "done" },
-    ],
-  },
-  {
-    label: "Y2 - S2",
-    gpa: 3.4,
-    courses: [
-      { name: "Operating Systems", credits: 3, status: "done" },
-      { name: "Computer Networks", credits: 3, status: "done" },
-      { name: "Software Engineering", credits: 3, status: "done" },
-    ],
-  },
-  {
-    label: "Y3 - S1",
-    gpa: 3.5,
-    courses: [
-      { name: "Machine Learning", credits: 3, status: "taking" },
-      { name: "Artificial Intelligence", credits: 3, status: "taking" },
-      { name: "Web Development", credits: 3, status: "taking" },
-    ],
-  },
-  {
-    label: "Y3 - S2",
-    gpa: 3.67,
-    courses: [
-      { name: "Cloud Computing", credits: 3, status: "taking" },
-      { name: "Cybersecurity", credits: 3, status: "taking" },
-      { name: "Mobile Development", credits: 3, status: "taking" },
-    ],
-  },
-];
+const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
 
-const Dashboard = ({ semesters: propSemesters, academic }) => {
-  const semesters = propSemesters && propSemesters.length > 0 ? propSemesters : defaultSemesters;
+const Dashboard = ({ userId, academic }) => {
+  const [semesters, setSemesters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { addToast } = useToast();
   const maxGPA = academic?.maxGPA || 4.0;
   const graduationCredits = academic?.graduationCredits || 120;
 
-  const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
+  useEffect(() => {
+    if (userId) {
+      loadSemesters();
+    }
+  }, [userId]);
+
+  const loadSemesters = async () => {
+    try {
+      setLoading(true);
+      const data = await authAPI.getSemesters();
+      setSemesters(data.semesters || []);
+    } catch (error) {
+      addToast(error.message || "Failed to load semesters", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const scaleToMax = (val) => (val / 4.0) * maxGPA;
 
   const calcSemesterGPA = (sem) => {
-    const graded = sem.courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined);
+    const graded = sem.courses ? sem.courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined) : [];
     if (graded.length === 0) return sem.gpa || 0;
     const totalCredits = graded.reduce((s, c) => s + c.credits, 0);
     if (totalCredits === 0) return 0;
@@ -78,13 +45,14 @@ const Dashboard = ({ semesters: propSemesters, academic }) => {
   };
 
   const totalCredits = semesters.reduce(
-    (sum, sem) => sum + sem.courses.reduce((s, c) => s + c.credits, 0), 0
+    (sum, sem) => sum + (sem.courses ? sem.courses.reduce((s, c) => s + c.credits, 0) : 0),
+    0
   );
 
-  const totalCourses = semesters.reduce((sum, sem) => sum + sem.courses.length, 0);
+  const totalCourses = semesters.reduce((sum, sem) => sum + (sem.courses ? sem.courses.length : 0), 0);
 
   const completedSemesters = semesters.filter((sem) =>
-    sem.courses.every((c) => c.status === "done")
+    sem.courses && sem.courses.every((c) => c.status === "completed")
   );
 
   const cumulativeGPA =
@@ -102,6 +70,14 @@ const Dashboard = ({ semesters: propSemesters, academic }) => {
     Math.round((totalCredits / graduationCredits) * 100),
     100
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#111111]">
+        <div className="w-8 h-8 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 w-full min-h-screen bg-[#111111]">
@@ -136,5 +112,3 @@ const Dashboard = ({ semesters: propSemesters, academic }) => {
 };
 
 export default Dashboard;
-
-
