@@ -28,8 +28,9 @@ export const register = async (req, res) => {
       user: { id: user.id, email: user.email, name: user.name }
     });
   } catch (error) {
-    console.error("Register error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Register error:", error.message);
+    console.error(error.stack);
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 };
 

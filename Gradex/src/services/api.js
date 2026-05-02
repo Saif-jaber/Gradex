@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001/api";
+const API_URL = "/api";
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");
@@ -16,13 +16,18 @@ export const apiRequest = async (endpoint, options = {}) => {
     headers: { ...defaultOptions.headers, ...options.headers },
   });
 
-  const data = await response.json();
+  const text = await response.text();
+  console.log('Response:', response.status, text);
 
   if (!response.ok) {
-    throw new Error(data.error || "Something went wrong");
+    throw new Error(text || "Something went wrong");
   }
 
-  return data;
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error("Invalid JSON response: " + text);
+  }
 };
 
 export const authAPI = {
