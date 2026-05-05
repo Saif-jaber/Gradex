@@ -8,8 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node --experimental-vm-modules server/index.js",
-    "server:dev": "npx nodemon --experimental-modules server/index.js",
+    "server": "cd server && node index.js",
+    "server:dev": "cd server && npx nodemon index.js",
     "start": "concurrently \"npm run server\" \"npm run dev\""
   },
   "dependencies": {

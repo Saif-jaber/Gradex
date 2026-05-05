@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 
 const BRAND_RED = "#f23131";
@@ -6,6 +6,7 @@ const BRAND_RED = "#f23131";
 const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 }) => {
   const [year, setYear] = useState(1);
   const [semester, setSemester] = useState(1);
+  const [error, setError] = useState("");
   const [courses, setCourses] = useState([
     { name: "", credits: defaultCredits, status: "done", grade: "A" },
   ]);
@@ -26,8 +27,15 @@ const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("");
     const validCourses = courses.filter((c) => c.name.trim());
     if (validCourses.length === 0) return;
+
+    const label = `Y${year} - S${semester}`;
+    if (semesters.find((s) => s.label === label)) {
+      setError("This semester already exists");
+      return;
+    }
 
     const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
     const totalCredits = validCourses.reduce((sum, c) => sum + Number(c.credits), 0);
@@ -35,7 +43,7 @@ const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 
     const avgGpa = totalCredits > 0 ? (qualityPoints / totalCredits) : 0;
 
     onAdd({
-      label: `Y${year} - S${semester}`,
+      label,
       gpa: parseFloat(avgGpa.toFixed(2)),
       courses: validCourses.map((c) => ({
         name: c.name.trim(),
@@ -50,6 +58,10 @@ const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 
     onClose();
   };
 
+  useEffect(() => {
+    if (!isOpen) setError("");
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -60,18 +72,22 @@ const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 
         className="relative w-full max-w-lg bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-white">Add Semester</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
-          >
-            <X size={18} />
-          </button>
-        </div>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-white">Add Semester</h2>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <p className="text-xs text-red-400 -mt-3 mb-3">{error}</p>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
           {/* Year & Semester */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">

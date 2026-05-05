@@ -133,7 +133,7 @@ const App = () => {
             />
 
             <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
-              <Dashboard semesters={semesters} academic={academic} userId={user.id} />
+              <Dashboard semesters={semesters} academic={academic} />
             </main>
 
             <AddSemesterPopup
@@ -185,7 +185,38 @@ const App = () => {
       <Route path="/courses" element={<Courses />} />
       <Route path="/add-semester" element={<AddSemester />} />
       <Route path="/add-course" element={<AddCourse />} />
-      <Route path="/settings" element={<SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />} />
+      <Route path="/settings" element={
+        user ? (
+          <div className="flex h-screen w-full bg-[#111111]">
+            <Sidebar
+              collapsed={collapsed}
+              setCollapsed={setCollapsed}
+              onOpenAddSemester={() => setShowAddSemester(true)}
+              onOpenAddCourse={() => setShowAddCourse(true)}
+              onOpenDeleteSemester={() => setShowDeleteSemester(true)}
+              onOpenDeleteCourse={() => setShowDeleteCourse(true)}
+              onLogout={handleLogout}
+              user={user}
+            />
+            <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
+              <SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />
+            </main>
+          </div>
+        ) : (
+          <div className="min-h-screen bg-[#111111] flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-white mb-4">Please log in to continue</h2>
+              <button
+                onClick={() => navigate("/")}
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-white"
+                style={{ backgroundColor: "#f23131" }}
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        )
+      } />
     </Routes>
   );
 };

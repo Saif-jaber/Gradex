@@ -11,7 +11,20 @@ const calcSemesterGPA = (sem) => {
 };
 
 const GpaBarChart = ({ semesters, maxGpa = 4.0 }) => {
-  if (!semesters || semesters.length === 0) return null;
+  if (!semesters || semesters.length === 0) {
+    return (
+      <div
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.07)",
+        }}
+        className="rounded-2xl p-6 flex flex-col gap-5 items-center justify-center min-h-[200px]"
+      >
+        <h2 className="text-sm font-semibold text-white">GPA by semester</h2>
+        <span className="text-xs text-gray-500">No registered semesters yet</span>
+      </div>
+    );
+  }
 
   return (
     <div

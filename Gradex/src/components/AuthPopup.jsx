@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import { useToast } from "../context/ToastContext";
-import { authAPI } from "../services/api";
+import { signup, login } from "../services/authSrv";
 
 const BRAND_RED = "#f23131";
 
@@ -39,12 +39,12 @@ const AuthPopup = ({ isOpen, onClose, mode = "login" }) => {
     setLoading(true);
     try {
       if (formMode === "signup") {
-        const data = await authAPI.register(email, password, name);
+      const data = await signup({email, password, name});
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         addToast("Account created successfully!", "success");
       } else {
-        const data = await authAPI.login(email, password);
+        const data = await login({email, password});
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         addToast("Logged in successfully!", "success");

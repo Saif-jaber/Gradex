@@ -1,66 +1,67 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { createUser, findUserByEmail } from "../services/userService.js";
+import pool from '../config/db.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+// signup user
+export const signup = async (req, res) => {
+    try {
+        const  {email, password, name} =req.body;
 
-export const register = async (req, res) => {
-  try {
-    const { email, password, name } = req.body;
+        const existingUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
 
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: "Email, password, and name are required" });
+        if (existingUser.rows.length > 0) { //  check if user exists
+            return res.status(400).send('User already exists');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10); // hash password
+        //  add the new user
+        const newUser = await pool.query("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email", [name, email, hashedPassword])
+        res.status(201).json({ user: newUser.rows[0], message: 'Signup successful' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
     }
+}
 
-    const existingUser = await findUserByEmail(email);
-    if (existingUser) {
-      return res.status(409).json({ error: "Email already registered" });
-    }
+// login user
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await createUser(email, passwordHash, name);
-
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
-
-    res.status(201).json({
-      message: "Registration successful",
-      token,
-      user: { id: user.id, email: user.email, name: user.name }
-    });
-  } catch (error) {
-    console.error("Register error:", error.message);
-    console.error(error.stack);
-    res.status(500).json({ error: error.message || "Internal server error" });
-  }
-};
-
-export const login = async (req, res) => {
+export const login = async (req, res) =>{
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
+    const result = await pool.query('SELECT * FROM users WHERE email = $1',[email]);
 
-    const user = await findUserByEmail(email);
+    const user = result.rows[0];
+
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(400).send('User not found');
     }
 
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) {
-      return res.status(401).json({ error: "Invalid email or password" });
+    // compare password
+    const valid = await bcrypt.compare(password, user.password_hash);
+
+    if (!valid) {
+      return res.status(400).send('Wrong password');
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
+    // create token
+    const token = jwt.sign(
+      { id: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
 
     res.json({
-      message: "Login successful",
       token,
-      user: { id: user.id, email: user.email, name: user.name }
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
     });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Internal server error" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
   }
-};
+}
