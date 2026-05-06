@@ -8,6 +8,7 @@ import AddSemesterPopup from "./components/Addsemesterpopup";
 import AddCoursePopup from "./components/Addcoursepopup";
 import DeleteSemesterPopup from "./components/Deletesemesterpopup";
 import DeleteCoursePopup from "./components/Deletecoursepopup";
+import UpdateCourseStatusPopup from "./components/UpdateCourseStatusPopup";
 
 const Semesters = () => (
   <h1 className="text-white text-3xl">Semesters</h1>
@@ -31,6 +32,7 @@ const App = () => {
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showDeleteSemester, setShowDeleteSemester] = useState(false);
   const [showDeleteCourse, setShowDeleteCourse] = useState(false);
+  const [showUpdateCourseStatus, setShowUpdateCourseStatus] = useState(false);
   const [semesters, setSemesters] = useState([]);
   const [academic, setAcademic] = useState({
     maxGPA: 4.0,
@@ -115,58 +117,46 @@ const App = () => {
     );
   };
 
+  const handleUpdateCourseStatus = (semesterLabel, courseName, newStatus) => {
+    setSemesters((prev) =>
+      prev.map((s) => {
+        if (s.label === semesterLabel) {
+          return {
+            ...s,
+            courses: s.courses.map((c) =>
+              c.name === courseName ? { ...c, status: newStatus } : c
+            ),
+          };
+        }
+        return s;
+      })
+    );
+  };
+
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage user={user} onLogout={handleLogout} />} />
-      <Route path="/dashboard" element={
-        user ? (
-          <div className="flex h-screen w-full bg-[#111111]">
-            <Sidebar
-              collapsed={collapsed}
-              setCollapsed={setCollapsed}
-              onOpenAddSemester={() => setShowAddSemester(true)}
-              onOpenAddCourse={() => setShowAddCourse(true)}
-              onOpenDeleteSemester={() => setShowDeleteSemester(true)}
-              onOpenDeleteCourse={() => setShowDeleteCourse(true)}
-              onLogout={handleLogout}
-              user={user}
-            />
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage user={user} onLogout={handleLogout} />} />
+        <Route path="/dashboard" element={
+          user ? (
+            <div className="flex h-screen w-full bg-[#111111]">
+              <Sidebar
+                collapsed={collapsed}
+                setCollapsed={setCollapsed}
+                onOpenAddSemester={() => setShowAddSemester(true)}
+                onOpenAddCourse={() => setShowAddCourse(true)}
+                onOpenDeleteSemester={() => setShowDeleteSemester(true)}
+                onOpenDeleteCourse={() => setShowDeleteCourse(true)}
+                onOpenUpdateCourseStatus={() => setShowUpdateCourseStatus(true)}
+                onLogout={handleLogout}
+                user={user}
+              />
 
-            <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
-              <Dashboard semesters={semesters} academic={academic} />
-            </main>
-
-            <AddSemesterPopup
-              isOpen={showAddSemester}
-              onClose={() => setShowAddSemester(false)}
-              semesters={semesters}
-              onAdd={handleAddSemester}
-              defaultCredits={academic.defaultCredits}
-            />
-
-            <AddCoursePopup
-              isOpen={showAddCourse}
-              onClose={() => setShowAddCourse(false)}
-              semesters={semesters}
-              onAdd={handleAddCourse}
-              defaultCredits={academic.defaultCredits}
-            />
-
-            <DeleteSemesterPopup
-              isOpen={showDeleteSemester}
-              onClose={() => setShowDeleteSemester(false)}
-              semesters={semesters}
-              onDelete={handleDeleteSemester}
-            />
-
-            <DeleteCoursePopup
-              isOpen={showDeleteCourse}
-              onClose={() => setShowDeleteCourse(false)}
-              semesters={semesters}
-              onDelete={handleDeleteCourse}
-            />
-          </div>
-        ) : (
+              <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
+                <Dashboard semesters={semesters} academic={academic} />
+              </main>
+            </div>
+          ) : (
           <div className="min-h-screen bg-[#111111] flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-white mb-4">Please log in to continue</h2>
@@ -188,19 +178,20 @@ const App = () => {
       <Route path="/settings" element={
         user ? (
           <div className="flex h-screen w-full bg-[#111111]">
-            <Sidebar
-              collapsed={collapsed}
-              setCollapsed={setCollapsed}
-              onOpenAddSemester={() => setShowAddSemester(true)}
-              onOpenAddCourse={() => setShowAddCourse(true)}
-              onOpenDeleteSemester={() => setShowDeleteSemester(true)}
-              onOpenDeleteCourse={() => setShowDeleteCourse(true)}
-              onLogout={handleLogout}
-              user={user}
-            />
-            <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
-              <SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />
-            </main>
+              <Sidebar
+                collapsed={collapsed}
+                setCollapsed={setCollapsed}
+                onOpenAddSemester={() => setShowAddSemester(true)}
+                onOpenAddCourse={() => setShowAddCourse(true)}
+                onOpenDeleteSemester={() => setShowDeleteSemester(true)}
+                onOpenDeleteCourse={() => setShowDeleteCourse(true)}
+                onOpenUpdateCourseStatus={() => setShowUpdateCourseStatus(true)}
+                onLogout={handleLogout}
+                user={user}
+              />
+              <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
+                <SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />
+              </main>
           </div>
         ) : (
           <div className="min-h-screen bg-[#111111] flex items-center justify-center">
@@ -218,6 +209,44 @@ const App = () => {
         )
       } />
     </Routes>
+
+    <AddSemesterPopup
+      isOpen={showAddSemester}
+      onClose={() => setShowAddSemester(false)}
+      semesters={semesters}
+      onAdd={handleAddSemester}
+      defaultCredits={academic.defaultCredits}
+    />
+
+    <AddCoursePopup
+      isOpen={showAddCourse}
+      onClose={() => setShowAddCourse(false)}
+      semesters={semesters}
+      onAdd={handleAddCourse}
+      defaultCredits={academic.defaultCredits}
+    />
+
+    <DeleteSemesterPopup
+      isOpen={showDeleteSemester}
+      onClose={() => setShowDeleteSemester(false)}
+      semesters={semesters}
+      onDelete={handleDeleteSemester}
+    />
+
+    <DeleteCoursePopup
+      isOpen={showDeleteCourse}
+      onClose={() => setShowDeleteCourse(false)}
+      semesters={semesters}
+      onDelete={handleDeleteCourse}
+     />
+
+    <UpdateCourseStatusPopup
+      isOpen={showUpdateCourseStatus}
+      onClose={() => setShowUpdateCourseStatus(false)}
+      semesters={semesters}
+      onUpdate={handleUpdateCourseStatus}
+    />
+  </>
   );
 };
 

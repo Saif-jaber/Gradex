@@ -32,48 +32,50 @@ const GpaBarChart = ({ semesters, maxGpa = 4.0 }) => {
         background: "rgba(255,255,255,0.03)",
         border: "1px solid rgba(255,255,255,0.07)",
       }}
-      className="rounded-2xl p-6 flex flex-col gap-5"
+      className="rounded-2xl p-6 flex flex-col gap-5 h-full"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <h2 className="text-sm font-semibold text-white">GPA by semester</h2>
         <span className="text-[11px] text-gray-500">out of {maxGpa.toFixed(1)}</span>
       </div>
 
-      {/* Bars */}
-      <div className="flex flex-col gap-3.5">
-        {semesters.map((sem) => {
-          const raw = calcSemesterGPA(sem);
-          const gpa = (raw / 4.0) * maxGpa;
-          const pct = (gpa / maxGpa) * 100;
-          return (
-            <div key={sem.label} className="flex items-center gap-3">
-              {/* Label */}
-              <span className="text-[11px] text-gray-500 w-20 shrink-0">
-                {sem.label}
-              </span>
+      {/* Bars - scrollable */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col gap-3.5 pr-2">
+          {semesters.map((sem) => {
+            const raw = calcSemesterGPA(sem);
+            const gpa = (raw / 4.0) * maxGpa;
+            const pct = (gpa / maxGpa) * 100;
+            return (
+              <div key={sem.label} className="flex items-center gap-3">
+                {/* Label */}
+                <span className="text-[11px] text-gray-500 w-20 shrink-0">
+                  {sem.label}
+                </span>
 
-              {/* Track */}
-              <div
-                style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
-                className="flex-1 h-[6px] rounded-full overflow-hidden"
-              >
+                {/* Track */}
                 <div
-                  style={{
-                    width: `${pct}%`,
-                    background: `linear-gradient(90deg, #c0392b, ${BRAND_RED})`,
-                  }}
-                  className="h-full rounded-full"
-                />
-              </div>
+                  style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+                  className="flex-1 h-[6px] rounded-full overflow-hidden"
+                >
+                  <div
+                    style={{
+                      width: `${pct}%`,
+                      background: `linear-gradient(90deg, #c0392b, ${BRAND_RED})`,
+                    }}
+                    className="h-full rounded-full"
+                  />
+                </div>
 
-              {/* Value */}
-              <span className="text-xs font-semibold text-white w-8 text-right">
-                {gpa.toFixed(2)}
-              </span>
-            </div>
-          );
-        })}
+                {/* Value */}
+                <span className="text-xs font-semibold text-white w-8 text-right">
+                  {gpa.toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -189,11 +189,11 @@ const LandingPage = ({ user, onLogout }) => {
         </div>
         {mobileMenuOpen && (
           <div className="md:hidden bg-[#111111]/98 backdrop-blur-xl border-t border-white/5 px-6 py-6 space-y-4">
-            <button onClick={() => scrollToSection("features")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">Features</button>
-            <button onClick={() => scrollToSection("how-it-works")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">How It Works</button>
-            <button onClick={() => scrollToSection("faq")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">FAQ</button>
-               <div className="pt-2 space-y-3 border-t border-white/5">
-               {user ? (
+             <button onClick={() => scrollToSection("features")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">Features</button>
+             <button onClick={() => scrollToSection("how-it-works")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">How It Works</button>
+             <button onClick={() => scrollToSection("faq")} className="block w-full text-left text-sm text-gray-400 hover:text-white transition-colors py-2">FAQ</button>
+                <div className="pt-2 space-y-3 border-t border-white/5">
+                {user ? (
                  <>
                    <div className="text-center text-sm text-gray-300 py-2">{user.name}</div>
                    <button
@@ -660,45 +660,45 @@ const LandingPage = ({ user, onLogout }) => {
         </div>
       </section>
 
-      {/* =================== FOOTER =================== */}
-      <footer className="border-t border-white/5 py-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" className="w-7 h-7 object-contain rounded-lg" alt="Gradex logo" />
-              <div>
-                <span className="text-sm font-bold">Gradex</span>
-                <div className="text-xs text-gray-600">Academic Performance Tracker</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-8">
-              <button onClick={() => scrollToSection("features")} className="text-xs text-gray-500 hover:text-white transition-colors">Features</button>
-              <button onClick={() => scrollToSection("how-it-works")} className="text-xs text-gray-500 hover:text-white transition-colors">How It Works</button>
-              <button onClick={() => scrollToSection("faq")} className="text-xs text-gray-500 hover:text-white transition-colors">FAQ</button>
-               {user ? (
-                 <button
-                   onClick={onLogout}
-                   className="text-xs font-medium hover:text-white transition-colors"
-                   style={{ color: BRAND_RED }}
-                 >
-                   Logout
-                 </button>
-               ) : (
-                 <button
-                   onClick={() => setAuthMode("login")}
-                   className="text-xs font-medium hover:text-white transition-colors"
-                   style={{ color: BRAND_RED }}
-                 >
-                   Sign In
-                 </button>
-               )}
-            </div>
-            <div className="text-xs text-gray-600">
-              Built for students. Free forever.
-            </div>
-          </div>
-        </div>
-      </footer>
+       {/* =================== FOOTER =================== */}
+       <footer className="border-t border-white/5 py-12 px-6">
+         <div className="max-w-6xl mx-auto">
+           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+             <div className="flex items-center gap-3">
+               <img src="/logo.png" className="w-7 h-7 object-contain rounded-lg" alt="Gradex logo" />
+               <div>
+                 <span className="text-sm font-bold">Gradex</span>
+                 <div className="text-xs text-gray-600">Academic Performance Tracker</div>
+               </div>
+             </div>
+             <div className="flex items-center gap-8">
+               <button onClick={() => scrollToSection("features")} className="text-xs text-gray-500 hover:text-white transition-colors">Features</button>
+               <button onClick={() => scrollToSection("how-it-works")} className="text-xs text-gray-500 hover:text-white transition-colors">How It Works</button>
+               <button onClick={() => scrollToSection("faq")} className="text-xs text-gray-500 hover:text-white transition-colors">FAQ</button>
+                {user ? (
+                  <button
+                    onClick={onLogout}
+                    className="text-xs font-medium hover:text-white transition-colors"
+                    style={{ color: BRAND_RED }}
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setAuthMode("login")}
+                    className="text-xs font-medium hover:text-white transition-colors"
+                    style={{ color: BRAND_RED }}
+                  >
+                    Sign In
+                  </button>
+                )}
+             </div>
+             <div className="text-xs text-gray-600">
+               Built for students. Free forever.
+             </div>
+           </div>
+         </div>
+       </footer>
 
       {/* =================== SCROLL TO TOP =================== */}
       {showScrollTop && (

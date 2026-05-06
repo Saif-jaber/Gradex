@@ -33,7 +33,7 @@ const GpaGauge = ({
         background: "rgba(255,255,255,0.03)",
         border: "1px solid rgba(255,255,255,0.07)",
       }}
-      className="rounded-2xl p-6 flex flex-col gap-4"
+      className="rounded-2xl p-6 flex flex-col gap-4 h-full"
     >
       {/* Header */}
       <h2 className="text-sm font-semibold text-white">Cumulative GPA</h2>

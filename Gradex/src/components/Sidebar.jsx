@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  RefreshCw,
 } from "lucide-react";
 
 const BRAND_RED = "#f23131";
@@ -65,6 +66,13 @@ const NAV_ITEMS = [
     popup: "deleteCourse",
     icon: <Trash2 size={18} />,
     label: "Delete Course",
+    section: null,
+  },
+  {
+    id: "update-status",
+    popup: "updateCourseStatus",
+    icon: <RefreshCw size={18} />,
+    label: "Update Course Status",
     section: null,
   },
   {
@@ -170,7 +178,7 @@ const LogoutButton = ({ collapsed, onLogout, user }) => {
   );
 };
 
-const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, onOpenDeleteSemester, onOpenDeleteCourse, onLogout, user }) => {
+const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, onOpenDeleteSemester, onOpenDeleteCourse, onOpenUpdateCourseStatus, onLogout, user }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [flashId, setFlashId] = useState(null);
   const navigate = useNavigate();
@@ -181,6 +189,7 @@ const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, 
     addCourse: onOpenAddCourse,
     deleteSemester: onOpenDeleteSemester,
     deleteCourse: onOpenDeleteCourse,
+    updateCourseStatus: onOpenUpdateCourseStatus,
   };
 
   const handleNavClick = (path) => {

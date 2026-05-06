@@ -2,6 +2,7 @@ import StatCard from "../components/Statcard.jsx";
 import GpaBarChart from "../components/Gpabarchart.jsx";
 import GpaGauge from "../components/Gpagauge.jsx";
 import SemesterDisplayer from "../components/Semesterdisplayer.jsx";
+import DroppedFailedCourses from "../components/DroppedFailedCourses";
 
 const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
 
@@ -58,14 +59,21 @@ const Dashboard = ({ semesters, academic }) => {
         <StatCard label="Courses Taken" value={totalCourses} />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <GpaBarChart semesters={semesters} maxGpa={maxGPA} />
-        <GpaGauge
-          gpa={parseFloat(cumulativeGPA)}
-          maxGpa={maxGPA}
-          degreeProgress={degreeProgress}
-        />
+      {/* Charts and Dropped/Failed Widget */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-1 h-80">
+          <GpaBarChart semesters={semesters} maxGpa={maxGPA} />
+        </div>
+        <div className="md:col-span-1 h-80">
+          <GpaGauge
+            gpa={parseFloat(cumulativeGPA)}
+            maxGpa={maxGPA}
+            degreeProgress={degreeProgress}
+          />
+        </div>
+        <div className="md:col-span-1 h-80">
+          <DroppedFailedCourses semesters={semesters} />
+        </div>
       </div>
 
       {/* Separator */}
