@@ -5,6 +5,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.js';
+import coursesRoutes from './routes/courses.js';
+import semestersRoutes from './routes/semesters.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,5 +21,11 @@ app.use(express.json());
 
 // authenticating routes 
 app.use('/auth', authRoutes);
+
+// courses routes
+app.use('/courses', coursesRoutes);
+
+// semesters routes
+app.use('/semesters', semestersRoutes);
 
 app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`));
