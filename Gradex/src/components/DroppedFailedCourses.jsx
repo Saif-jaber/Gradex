@@ -69,11 +69,11 @@ const DroppedFailedCourses = ({ semesters }) => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="appearance-none bg-white/5 border border-white/10 rounded-lg text-xs text-gray-200 pl-8 pr-8 py-2 outline-none focus:border-red-500/50 transition-colors cursor-pointer"
+            className="appearance-none bg-[#141414] border border-white/10 rounded-lg text-xs text-white pl-8 pr-8 py-2 outline-none focus:border-red-500/50 transition-colors cursor-pointer"
           >
-            <option value="all">All</option>
-            <option value="dropped">Dropped</option>
-            <option value="failed">Failed</option>
+            <option value="all" className="bg-[#141414] text-white">All</option>
+            <option value="dropped" className="bg-[#141414] text-white">Dropped</option>
+            <option value="failed" className="bg-[#141414] text-white">Failed</option>
           </select>
           <Filter size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
         </div>

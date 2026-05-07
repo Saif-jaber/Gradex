@@ -9,6 +9,7 @@ import AddCoursePopup from "./components/Addcoursepopup";
 import DeleteSemesterPopup from "./components/Deletesemesterpopup";
 import DeleteCoursePopup from "./components/Deletecoursepopup";
 import UpdateCourseStatusPopup from "./components/UpdateCourseStatusPopup";
+import UpdateCourseGradePopup from "./components/UpdateCourseGradePopup";
 
 const Semesters = () => (
   <h1 className="text-white text-3xl">Semesters</h1>
@@ -33,6 +34,7 @@ const App = () => {
   const [showDeleteSemester, setShowDeleteSemester] = useState(false);
   const [showDeleteCourse, setShowDeleteCourse] = useState(false);
   const [showUpdateCourseStatus, setShowUpdateCourseStatus] = useState(false);
+  const [showUpdateCourseGrade, setShowUpdateCourseGrade] = useState(false);
   const [semesters, setSemesters] = useState([]);
   const [academic, setAcademic] = useState({
     maxGPA: 4.0,
@@ -68,7 +70,7 @@ const App = () => {
     setSemesters((prev) => [...prev, newSem]);
   };
 
-  const handleAddCourse = ({ semester, course }) => {
+  const handleAddCourse = ({ semester, courses: newCourses }) => {
     const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
 
     const recalcGPA = (courses) => {
@@ -82,11 +84,11 @@ const App = () => {
     setSemesters((prev) => {
       const exists = prev.find((s) => s.label === semester);
       if (exists) {
-        const updated = { ...exists, courses: [...exists.courses, course] };
+        const updated = { ...exists, courses: [...exists.courses, ...newCourses] };
         updated.gpa = recalcGPA(updated.courses);
         return prev.map((s) => s.label === semester ? updated : s);
       }
-      return [...prev, { label: semester, gpa: 0.0, courses: [course] }];
+      return [...prev, { label: semester, gpa: 0.0, courses: newCourses }];
     });
   };
 
@@ -133,6 +135,36 @@ const App = () => {
     );
   };
 
+  const handleUpdateCourseGrade = ({ semester, courseName, grade, status }) => {
+    const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
+
+    setSemesters((prev) =>
+      prev.map((s) => {
+        if (s.label === semester) {
+          const updated = {
+            ...s,
+            courses: s.courses.map((c) =>
+              c.name === courseName ? { ...c, grade, status } : c
+            ),
+          };
+          const graded = updated.courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined);
+          if (graded.length === 0) {
+            updated.gpa = 0;
+          } else {
+            const totalCredits = graded.reduce((sum, c) => sum + c.credits, 0);
+            if (totalCredits > 0) {
+              updated.gpa = parseFloat(
+                (graded.reduce((sum, c) => sum + gradeMap[c.grade] * c.credits, 0) / totalCredits).toFixed(2)
+              );
+            }
+          }
+          return updated;
+        }
+        return s;
+      })
+    );
+  };
+
   return (
     <>
       <Routes>
@@ -148,6 +180,7 @@ const App = () => {
                 onOpenDeleteSemester={() => setShowDeleteSemester(true)}
                 onOpenDeleteCourse={() => setShowDeleteCourse(true)}
                 onOpenUpdateCourseStatus={() => setShowUpdateCourseStatus(true)}
+                onOpenUpdateCourseGrade={() => setShowUpdateCourseGrade(true)}
                 onLogout={handleLogout}
                 user={user}
               />
@@ -178,17 +211,18 @@ const App = () => {
       <Route path="/settings" element={
         user ? (
           <div className="flex h-screen w-full bg-[#111111]">
-              <Sidebar
-                collapsed={collapsed}
-                setCollapsed={setCollapsed}
-                onOpenAddSemester={() => setShowAddSemester(true)}
-                onOpenAddCourse={() => setShowAddCourse(true)}
-                onOpenDeleteSemester={() => setShowDeleteSemester(true)}
-                onOpenDeleteCourse={() => setShowDeleteCourse(true)}
-                onOpenUpdateCourseStatus={() => setShowUpdateCourseStatus(true)}
-                onLogout={handleLogout}
-                user={user}
-              />
+                 <Sidebar
+                 collapsed={collapsed}
+                 setCollapsed={setCollapsed}
+                 onOpenAddSemester={() => setShowAddSemester(true)}
+                 onOpenAddCourse={() => setShowAddCourse(true)}
+                 onOpenDeleteSemester={() => setShowDeleteSemester(true)}
+                 onOpenDeleteCourse={() => setShowDeleteCourse(true)}
+                 onOpenUpdateCourseStatus={() => setShowUpdateCourseStatus(true)}
+                 onOpenUpdateCourseGrade={() => setShowUpdateCourseGrade(true)}
+                 onLogout={handleLogout}
+                 user={user}
+               />
               <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
                 <SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />
               </main>
@@ -245,6 +279,13 @@ const App = () => {
       onClose={() => setShowUpdateCourseStatus(false)}
       semesters={semesters}
       onUpdate={handleUpdateCourseStatus}
+    />
+
+    <UpdateCourseGradePopup
+      isOpen={showUpdateCourseGrade}
+      onClose={() => setShowUpdateCourseGrade(false)}
+      semesters={semesters}
+      onUpdate={handleUpdateCourseGrade}
     />
   </>
   );
