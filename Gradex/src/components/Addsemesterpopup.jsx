@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { addSemester, getSemesterId } from "../services/semSrv";
 
 const BRAND_RED = "#f23131";
 
@@ -10,7 +11,7 @@ const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd }) => {
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     const label = `Y${year} - S${semester}`;
@@ -20,13 +21,25 @@ const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd }) => {
       return;
     }
 
-    if (semesters.find((s) => s.label === label)) {
-      setError("This semester already exists");
+    if (new Date(startDate) > new Date(endDate)) {
+      setError("Start date cannot be after end date");
       return;
     }
 
-    if (new Date(startDate) > new Date(endDate)) {
-      setError("Start date cannot be after end date");
+    try {
+      const existing = await getSemesterId(label);
+      if (existing) {
+        setError("Semester already exists");
+        return;
+      }
+    } catch {
+      // not found — proceed
+    }
+
+    try {
+      await addSemester({ name: label, academic_year: year, start_date: startDate, end_date: endDate });
+    } catch {
+      setError("Failed to create semester");
       return;
     }
 

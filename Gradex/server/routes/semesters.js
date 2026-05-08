@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSemester, deleteSemester, getSemesters } from '../controllers/semContoller.js';
+import { createSemester, deleteSemester, getSemesters, checkSemesterExists, getSemesterIdByName } from '../controllers/semContoller.js';
 import { verifyToken } from "../middleware/verifyToken.js";
 import { checkSemesterOwnership } from "../middleware/checkSemesterOwnership.js";
 
@@ -10,6 +10,12 @@ router.use(verifyToken);
 
 // Create semester
 router.post("/add", createSemester);
+
+// check if semester exists
+router.get("/check/:semester_id", checkSemesterExists);
+
+// get a semester by name of semester
+router.get('/id/:name', getSemesterIdByName);
 
 // Get all semesters (with courses)
 router.get("/semList", getSemesters);

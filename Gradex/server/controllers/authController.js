@@ -65,3 +65,17 @@ export const login = async (req, res) =>{
     res.status(500).send('Server error');
   }
 }
+
+export const getUserID = async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+    const userId = result.rows[0]?.id;
+
+    if(!userid){
+      return res.status(400).send('user not found');
+    }
+
+  } catch (error) {
+      res.status(500).send('Server error');
+  }
+}

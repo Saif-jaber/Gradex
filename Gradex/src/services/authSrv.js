@@ -27,3 +27,19 @@ export const signup = async (data) => {
     throw new Error(text);
   }
 };
+
+export const getUserID = async (data) => {
+  const res = await fetch(`${API}/auth/getUserID`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(text);
+  }
+};

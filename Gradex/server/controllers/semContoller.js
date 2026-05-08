@@ -80,3 +80,91 @@ export const getSemesters = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch semesters" });
   }
 };
+
+// get semester id by name
+export const getSemesterIdByName = async (req, res) => {
+    try {
+        const { name } = req.params;
+        const user_id = req.user.id;
+
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                message: 'Semester name is required'
+            });
+        }
+
+        const query = `
+            SELECT id
+            FROM semesters
+            WHERE name = $1
+            AND user_id = $2
+        `;
+
+        const result = await pool.query(query, [name, user_id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Semester not found'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            semester_id: result.rows[0].id
+        });
+
+    } catch (error) {
+        console.error('Get semester id error:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+// check if semester exists
+export const checkSemesterExists = async (req, res) => {
+    try {
+        const { semester_id } = req.params;
+
+        if (!semester_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Semester ID is required'
+            });
+        }
+
+        const query = `
+            SELECT *
+            FROM semesters
+            WHERE id = $1
+        `;
+
+        const result = await pool.query(query, [semester_id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                exists: false,
+                message: 'Semester not found'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            exists: true,
+            semester: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Check semester error:', error);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
