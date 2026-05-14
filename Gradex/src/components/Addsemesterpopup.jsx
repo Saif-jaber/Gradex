@@ -36,14 +36,16 @@ const AddSemesterPopup = ({ isOpen, onClose, semesters, onAdd }) => {
       // not found — proceed
     }
 
+    let newSem;
     try {
-      await addSemester({ name: label, academic_year: year, start_date: startDate, end_date: endDate });
+      newSem = await addSemester({ name: label, academic_year: year, start_date: startDate, end_date: endDate });
     } catch {
       setError("Failed to create semester");
       return;
     }
 
     onAdd({
+      id: newSem.id,
       label,
       startDate,
       endDate,

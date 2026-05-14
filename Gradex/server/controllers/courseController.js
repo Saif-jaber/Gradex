@@ -1,17 +1,18 @@
 import pool from '../config/db.js';
+import format from 'pg-format';
 
 // add course
 export const addCourse = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { semester_id, name, code, credits, grade, status } = req.body;
+    const { semester_id, courses } = req.body;
 
     // 1. Validate input
-    if (!semester_id || !name || !credits) {
+    if (!semester_id || courses.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // 2. Check ownership (VERY IMPORTANT)
+    // 2. Check ownership 
     const semCheck = await pool.query(
       `SELECT * FROM semesters WHERE id = $1 AND user_id = $2`,
       [semester_id, userId]
@@ -21,27 +22,27 @@ export const addCourse = async (req, res) => {
       return res.status(403).json({ error: "Not authorized to add course to this semester" });
     }
 
-    // 3. Insert course
-    const result = await pool.query(
-      `INSERT INTO courses 
-       (semester_id, name, code, credits, grade, status)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       RETURNING *`,
-      [
-        semester_id,
-        name,
-        code || null,
-        credits,
-        grade || null,
-        status || "taking"
-      ]
+    // 3. convert the array to a mapped array of arrays
+    const coursesVal = courses.map(course => [  // each item is called (course)
+      semester_id,
+      course.name,
+      course.credits,
+      course.status,
+      course.grade,
+    ]);
+
+    const query = format(
+      'INSERT INTO courses (semester_id, name, credits, status, grade) VALUES %L RETURNING *', 
+      coursesVal
     );
 
-    res.status(201).json(result.rows[0]);
-
+    const result = await pool.query(query);
+    res.status(201).json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create course" });
+    console.error("=== ADD COURSE ERROR ===");
+    console.error("Message:", err.message);
+    console.error("Stack:", err.stack);
+    res.status(500).json({ error: err.message || "Failed to add course" });
   }
 };
 

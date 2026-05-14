@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
+import { addCourse, deleteCourse, updateCourseStatus } from "../services/courseSrv";
+import SuccessPopup from "./SuccessPopup.jsx";
 
 const BRAND_RED = "#f23131";
 
 const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 }) => {
   const [selectedSemester, setSelectedSemester] = useState("");
   const [error, setError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false); // for the success message 
   const [courses, setCourses] = useState([
     { name: "", credits: defaultCredits, status: "done", grade: "A" },
   ]);
@@ -29,7 +32,7 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
     setCourses(updated);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -41,25 +44,52 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
     const validCourses = courses.filter((c) => c.name.trim());
     if (validCourses.length === 0) return;
 
-    onAdd({
-      semester: selectedSemester,
-      courses: validCourses.map((c) => ({
+    try {
+      const matched = semesters.find((s) => s.label === selectedSemester);
+      if (!matched || !matched.id) {
+        setError("Semester not found. Please try again.");
+        return;
+      }
+
+      // map status to match DB CHECK constraint
+      const coursesData = validCourses.map((c) => ({
         name: c.name.trim(),
         credits: Number(c.credits),
         grade: c.grade,
-        status: c.grade === "F" ? "failed" : c.status,
-      })),
-    });
+        status: c.grade === "F" ? "failed" : c.status === "done" ? "completed" : c.status,
+      }));
 
-    setSelectedSemester("");
-    setCourses([{ name: "", credits: defaultCredits, status: "done", grade: "A" }]);
-    onClose();
+      const data = await addCourse({ semester_id: matched.id, courses: coursesData });
+
+      onAdd({
+        semester: selectedSemester,
+        courses: coursesData,
+      });
+
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setSelectedSemester("");
+        setCourses([{ name: "", credits: defaultCredits, status: "done", grade: "A" }]);
+        onClose();
+      }, 2000);
+    } catch (err) {
+      console.error("Add course error:", err);
+      setError(err.message || "Failed to add courses. Please try again.");
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <>
+      <SuccessPopup
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        message="Courses added successfully!"
+        className="w-full max-w-md"
+      />
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
       <div
@@ -206,6 +236,7 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
         </form>
       </div>
     </div>
+    </>
   );
 };
 

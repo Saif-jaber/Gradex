@@ -10,6 +10,7 @@ import DeleteSemesterPopup from "./components/Deletesemesterpopup";
 import DeleteCoursePopup from "./components/Deletecoursepopup";
 import UpdateCourseStatusPopup from "./components/UpdateCourseStatusPopup";
 import UpdateCourseGradePopup from "./components/UpdateCourseGradePopup";
+import SuccessPopup from "./components/SuccessPopup";
 
 const Semesters = () => (
   <h1 className="text-white text-3xl">Semesters</h1>
@@ -35,6 +36,8 @@ const App = () => {
   const [showDeleteCourse, setShowDeleteCourse] = useState(false);
   const [showUpdateCourseStatus, setShowUpdateCourseStatus] = useState(false);
   const [showUpdateCourseGrade, setShowUpdateCourseGrade] = useState(false);
+  const [showCourseSuccess, setShowCourseSuccess] = useState(false);
+  const [showSemesterSuccess, setShowSemesterSuccess] = useState(false);
   const [semesters, setSemesters] = useState([]);
   const [academic, setAcademic] = useState({
     maxGPA: 4.0,
@@ -68,6 +71,8 @@ const App = () => {
 
   const handleAddSemester = (newSem) => {
     setSemesters((prev) => [...prev, newSem]);
+    setShowSemesterSuccess(true);
+    setTimeout(() => setShowSemesterSuccess(false), 4000);
   };
 
   const handleAddCourse = ({ semester, courses: newCourses }) => {
@@ -90,6 +95,8 @@ const App = () => {
       }
       return [...prev, { label: semester, gpa: 0.0, courses: newCourses }];
     });
+    setShowCourseSuccess(true);
+    setTimeout(() => setShowCourseSuccess(false), 4000);
   };
 
   const handleDeleteSemester = (label) => {
@@ -286,6 +293,19 @@ const App = () => {
       onClose={() => setShowUpdateCourseGrade(false)}
       semesters={semesters}
       onUpdate={handleUpdateCourseGrade}
+    />
+
+    <SuccessPopup
+      isOpen={showCourseSuccess}
+      onClose={() => setShowCourseSuccess(false)}
+      message="Courses added successfully!"
+      className="w-full max-w-lg"
+    />
+    <SuccessPopup
+      isOpen={showSemesterSuccess}
+      onClose={() => setShowSemesterSuccess(false)}
+      message="Semester added successfully!"
+      className="w-full max-w-md"
     />
   </>
   );

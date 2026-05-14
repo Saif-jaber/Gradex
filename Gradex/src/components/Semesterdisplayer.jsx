@@ -120,7 +120,7 @@ const SemesterDisplayer = ({ semesters, maxGpa = 4.0 }) => {
                       <div className="flex items-center gap-3">
                         <span
                           className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            course.status === "done" ? "bg-green-500" : "bg-yellow-500"
+                            course.status === "done" || course.status === "completed" ? "bg-green-500" : "bg-yellow-500"
                           }`}
                         />
                         <span className="text-gray-200">{course.name}</span>
@@ -132,12 +132,12 @@ const SemesterDisplayer = ({ semesters, maxGpa = 4.0 }) => {
                         )}
                         <span
                           className={`text-[10px] uppercase tracking-wide font-medium px-2 py-0.5 rounded ${
-                            course.status === "done"
+                            course.status === "done" || course.status === "completed"
                               ? "text-green-400 bg-green-400/10"
                               : "text-yellow-400 bg-yellow-400/10"
                           }`}
                         >
-                          {course.status === "done" ? "Completed" : "Taking"}
+                          {course.status === "done" || course.status === "completed" ? "Completed" : "Taking"}
                         </span>
                       </div>
                     </div>
