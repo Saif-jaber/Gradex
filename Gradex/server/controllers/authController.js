@@ -16,7 +16,18 @@ export const signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10); // hash password
         //  add the new user
         const newUser = await pool.query("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email", [name, email, hashedPassword])
-        res.status(201).json({ user: newUser.rows[0], message: 'Signup successful' });
+
+        const token = jwt.sign(
+          { id: newUser.rows[0].id },
+          process.env.JWT_SECRET,
+          { expiresIn: '1d' }
+        );
+
+        res.status(201).json({
+          token,
+          user: newUser.rows[0],
+          message: 'Signup successful'
+        });
     } catch (error) {
       console.error(error);
       res.status(500).send('Server error');

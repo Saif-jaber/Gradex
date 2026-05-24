@@ -1,3 +1,5 @@
+import pool from '../config/db.js';
+
 export const checkCourseOwnership = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -16,6 +18,10 @@ export const checkCourseOwnership = async (req, res, next) => {
 
     next();
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("=== CHECK COURSE OWNERSHIP ERROR ===");
+    console.error("Message:", err.message);
+    console.error("Stack:", err.stack);
+    console.error("courseId:", req.params.id, "userId:", req.user?.id);
+    res.status(500).json({ error: "Server error: " + err.message });
   }
 };

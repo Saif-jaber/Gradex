@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
-import { addCourse, deleteCourse, updateCourseStatus } from "../services/courseSrv";
+import { X } from "lucide-react";
+import { addCourse as addCourseApi } from "../services/courseSrv";
 import SuccessPopup from "./SuccessPopup.jsx";
 
 const BRAND_RED = "#f23131";
@@ -8,28 +8,23 @@ const BRAND_RED = "#f23131";
 const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 }) => {
   const [selectedSemester, setSelectedSemester] = useState("");
   const [error, setError] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false); // for the success message 
-  const [courses, setCourses] = useState([
-    { name: "", credits: defaultCredits, status: "done", grade: "A" },
-  ]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [course, setCourse] = useState({
+    name: "",
+    code: "",
+    credits: defaultCredits,
+    status: "done",
+    grade: "A",
+  });
 
-  const addCourse = () => {
-    setCourses([...courses, { name: "", credits: defaultCredits, status: "done", grade: "A" }]);
-  };
-
-  const removeCourse = (idx) => {
-    if (courses.length > 1) setCourses(courses.filter((_, i) => i !== idx));
-  };
-
-  const updateCourse = (idx, field, value) => {
-    const updated = [...courses];
-    updated[idx] = { ...updated[idx], [field]: value };
+  const updateCourse = (field, value) => {
+    const updated = { ...course, [field]: value };
 
     if (field === "grade" && value === "F") {
-      updated[idx].status = "failed";
+      updated.status = "failed";
     }
 
-    setCourses(updated);
+    setCourse(updated);
   };
 
   const handleSubmit = async (e) => {
@@ -41,8 +36,11 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
       return;
     }
 
-    const validCourses = courses.filter((c) => c.name.trim());
-    if (validCourses.length === 0) return;
+    const courseName = course.name.trim();
+    if (!courseName) {
+      setError("Please enter a course name");
+      return;
+    }
 
     try {
       const matched = semesters.find((s) => s.label === selectedSemester);
@@ -51,31 +49,36 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
         return;
       }
 
-      // map status to match DB CHECK constraint
-      const coursesData = validCourses.map((c) => ({
-        name: c.name.trim(),
-        credits: Number(c.credits),
-        grade: c.grade,
-        status: c.grade === "F" ? "failed" : c.status === "done" ? "completed" : c.status,
-      }));
+      const courseData = {
+        name: courseName,
+        code: course.code.trim() || null,
+        credits: Number(course.credits),
+        grade: course.grade,
+        status: course.grade === "F" ? "failed" : course.status === "done" ? "completed" : course.status,
+      };
 
-      const data = await addCourse({ semester_id: matched.id, courses: coursesData });
+       const dbCourse = await addCourseApi({
+         semester_id: matched.id,
+         ...courseData,
+       });
 
-      onAdd({
-        semester: selectedSemester,
-        courses: coursesData,
-      });
+       const courseWithId = { ...courseData, id: dbCourse?.id };
+
+       onAdd({
+         semester: selectedSemester,
+         course: courseWithId,
+       });
 
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         setSelectedSemester("");
-        setCourses([{ name: "", credits: defaultCredits, status: "done", grade: "A" }]);
+        setCourse({ name: "", code: "", credits: defaultCredits, status: "done", grade: "A" });
         onClose();
       }, 2000);
     } catch (err) {
       console.error("Add course error:", err);
-      setError(err.message || "Failed to add courses. Please try again.");
+      setError(err.message || "Failed to add course. Please try again.");
     }
   };
 
@@ -86,7 +89,7 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
       <SuccessPopup
         isOpen={showSuccess}
         onClose={() => setShowSuccess(false)}
-        message="Courses added successfully!"
+        message="Course added successfully!"
         className="w-full max-w-md"
       />
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -96,7 +99,6 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
         className="relative w-full max-w-lg bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white">Add Course</h2>
           <button
@@ -112,7 +114,6 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Select existing semester */}
           <div className="space-y-1.5">
             <label className="text-xs text-gray-400 font-medium">Select Semester</label>
             <select
@@ -131,105 +132,81 @@ const AddCoursePopup = ({ isOpen, onClose, semesters, onAdd, defaultCredits = 3 
             </select>
           </div>
 
-          {/* Courses */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs text-gray-400 font-medium">Courses</label>
-              <button
-                type="button"
-                onClick={addCourse}
-                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors"
-              >
-                <Plus size={14} />
-                Add course
-              </button>
+          <div className="bg-white/5 rounded-xl p-4 space-y-3 border border-white/5">
+            <div className="space-y-1">
+              <label className="text-xs text-gray-400 font-medium">Course Name</label>
+              <input
+                type="text"
+                placeholder="e.g., Calculus I"
+                value={course.name}
+                onChange={(e) => updateCourse("name", e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
+              />
             </div>
 
-            {courses.map((course, idx) => (
-              <div
-                key={idx}
-                className="bg-white/5 rounded-xl p-3 space-y-2.5 border border-white/5"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-[10px] uppercase tracking-wide text-gray-500 mt-2">
-                    #{idx + 1}
-                  </span>
-                  {courses.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeCourse(idx)}
-                      className="text-gray-500 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
+            <div className="space-y-1">
+              <label className="text-xs text-gray-400 font-medium">Course Code</label>
+              <input
+                type="text"
+                placeholder="e.g., MATH101"
+                value={course.code}
+                onChange={(e) => updateCourse("code", e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Course name"
-                    value={course.name}
-                    onChange={(e) => updateCourse(idx, "name", e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 px-3 py-2 outline-none focus:border-red-500/50 transition-colors"
-                  />
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-gray-500">Credits</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="6"
-                        value={course.credits}
-                        onChange={(e) => updateCourse(idx, "credits", e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2 outline-none focus:border-red-500/50 transition-colors"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-gray-500">Grade</label>
-                      <select
-                        value={course.grade}
-                        onChange={(e) => updateCourse(idx, "grade", e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2 outline-none focus:border-red-500/50 transition-colors"
-                      >
-                        {["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"].map((g) => (
-                          <option key={g} value={g} className="bg-[#1a1a1a]">{g}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-gray-500">Status</label>
-                      {course.grade === "F" ? (
-                        <div className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-red-400 px-3 py-2">
-                          Failed
-                        </div>
-                      ) : (
-                        <select
-                          value={course.status}
-                          onChange={(e) => updateCourse(idx, "status", e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2 outline-none focus:border-red-500/50 transition-colors"
-                        >
-                          <option value="done" className="bg-[#1a1a1a]">Completed</option>
-                          <option value="taking" className="bg-[#1a1a1a]">Taking</option>
-                          <option value="failed" className="bg-[#1a1a1a]">Failed</option>
-                          <option value="dropped" className="bg-[#1a1a1a]">Dropped</option>
-                        </select>
-                      )}
-                    </div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400 font-medium">Credits</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="6"
+                  value={course.credits}
+                  onChange={(e) => updateCourse("credits", e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
+                />
               </div>
-            ))}
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400 font-medium">Grade</label>
+                <select
+                  value={course.grade}
+                  onChange={(e) => updateCourse("grade", e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
+                >
+                  {["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"].map((g) => (
+                    <option key={g} value={g} className="bg-[#1a1a1a]">{g}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400 font-medium">Status</label>
+                {course.grade === "F" ? (
+                  <div className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-red-400 px-3 py-2.5 flex items-center">
+                    Failed
+                  </div>
+                ) : (
+                  <select
+                    value={course.status}
+                    onChange={(e) => updateCourse("status", e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
+                  >
+                    <option value="done" className="bg-[#1a1a1a]">Completed</option>
+                    <option value="taking" className="bg-[#1a1a1a]">Taking</option>
+                    <option value="failed" className="bg-[#1a1a1a]">Failed</option>
+                    <option value="dropped" className="bg-[#1a1a1a]">Dropped</option>
+                  </select>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             style={{ backgroundColor: BRAND_RED }}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity mt-4"
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity mt-2"
           >
             Add Course
           </button>

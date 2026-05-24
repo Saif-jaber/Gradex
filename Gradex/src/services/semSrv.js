@@ -38,19 +38,49 @@ export const getSemesterId = async (name) => {
     }
 }
 
-export const checkSemester = async (semester_id) => {
-    const res = await fetch(`${API}/semesters/check/${semester_id}`, {
-        method: 'GET',
-        headers: authHeaders(),
-    });
+ export const checkSemester = async (semester_id) => {
+     const res = await fetch(`${API}/semesters/check/${semester_id}`, {
+         method: 'GET',
+         headers: authHeaders(),
+     });
 
-    if (res.status === 404) return { exists: false };
+     if (res.status === 404) return { exists: false };
 
-    const text = await res.text();
-    if (!res.ok) throw new Error(text);
-    try {
-      return JSON.parse(text);
-    } catch {
-      throw new Error(text);
-    }
-}
+     const text = await res.text();
+     if (!res.ok) throw new Error(text);
+     try {
+       return JSON.parse(text);
+     } catch {
+       throw new Error(text);
+     }
+ }
+
+export const deleteSemester = async (semesterId) => {
+  const res = await fetch(`${API}/semesters/${semesterId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+};
+
+export const getSemesters = async () => {
+  const res = await fetch(`${API}/semesters/semList`, {
+    method: 'GET',
+    headers: authHeaders(),
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(text);
+  }
+};

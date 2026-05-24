@@ -16,12 +16,16 @@ const DeleteCoursePopup = ({ isOpen, onClose, semesters, onDelete }) => {
     c.semester.toLowerCase().includes(query.toLowerCase())
   );
 
-  const handleDelete = () => {
-    if (!pendingDelete) return;
-    onDelete(pendingDelete.semester, pendingDelete.name);
-    setPendingDelete(null);
-    onClose();
-  };
+   const handleDelete = () => {
+     if (!pendingDelete) return;
+     onDelete({ 
+       semesterLabel: pendingDelete.semester, 
+       courseName: pendingDelete.name,
+       courseId: pendingDelete.id 
+     });
+     setPendingDelete(null);
+     onClose();
+   };
 
   if (!isOpen) return null;
 

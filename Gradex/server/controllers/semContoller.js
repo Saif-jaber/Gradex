@@ -28,28 +28,40 @@ export const createSemester = async (req, res) => {
 
 export const deleteSemester = async (req, res) => {
   try {
+    console.log("=== DELETE SEMESTER CONTROLLER CALLED ===");
+    console.log("User ID:", req.user?.id);
+    console.log("Semester ID param:", req.params.id);
+    
     const userId = req.user.id;
     const { id } = req.params;
 
     // Check if semester belongs to this user
+    console.log("Checking ownership for semester:", id, "and user:", userId);
     const check = await pool.query(
       `SELECT * FROM semesters WHERE id = $1 AND user_id = $2`,
       [id, userId]
     );
 
+    console.log("Ownership check rows:", check.rows.length);
+
     if (check.rows.length === 0) {
+      console.log("Forbidden - semester not found or not owned by user");
       return res.status(403).json({ error: "Not authorized to delete this semester" });
     }
 
     // Delete semester (courses auto-delete via CASCADE)
-    await pool.query(
-      `DELETE FROM semesters WHERE id = $1`,
+    console.log("Attempting to DELETE semester with id:", id);
+    const deleteResult = await pool.query(
+      `DELETE FROM semesters WHERE id = $1 RETURNING *`,
       [id]
     );
+    
+    console.log("DELETE result:", deleteResult.rows.length, "rows deleted");
 
-    res.json({ message: "Semester deleted successfully" });
+    res.json({ message: "Semester deleted successfully", deleted: deleteResult.rows[0] });
 
   } catch (error) {
+    console.error("=== DELETE SEMESTER ERROR ===");
     console.error(error);
     res.status(500).json({ error: "Failed to delete semester" });
   }

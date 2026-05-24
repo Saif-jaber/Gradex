@@ -11,12 +11,15 @@ const DeleteSemesterPopup = ({ isOpen, onClose, semesters, onDelete }) => {
     sem.label.toLowerCase().includes(query.toLowerCase())
   );
 
-  const handleDelete = () => {
-    if (!pendingDelete) return;
-    onDelete(pendingDelete);
-    setPendingDelete(null);
-    onClose();
-  };
+   const handleDelete = () => {
+     if (!pendingDelete) return;
+     onDelete({ 
+       label: pendingDelete.label, 
+       id: pendingDelete.id 
+     });
+     setPendingDelete(null);
+     onClose();
+   };
 
   if (!isOpen) return null;
 
@@ -54,14 +57,14 @@ const DeleteSemesterPopup = ({ isOpen, onClose, semesters, onDelete }) => {
           )}
         </div>
 
-        {pendingDelete ? (
-          <div className="space-y-4">
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-              <AlertTriangle size={16} className="text-red-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-red-300">
-                Delete <span className="text-red-200 font-medium">{pendingDelete}</span> and all {semesters.find((s) => s.label === pendingDelete)?.courses.length} courses in it? This cannot be undone.
-              </p>
-            </div>
+         {pendingDelete ? (
+           <div className="space-y-4">
+             <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+               <AlertTriangle size={16} className="text-red-400 shrink-0 mt-0.5" />
+               <p className="text-xs text-red-300">
+                 Delete <span className="text-red-200 font-medium">{pendingDelete.label}</span> and all {pendingDelete.courses?.length || 0} courses in it? This cannot be undone.
+               </p>
+             </div>
             <div className="flex gap-2">
               <button
                 onClick={handleDelete}
@@ -94,10 +97,10 @@ const DeleteSemesterPopup = ({ isOpen, onClose, semesters, onDelete }) => {
                     <span className="text-sm text-white font-medium">{sem.label}</span>
                     <span className="text-[10px] text-gray-500 ml-2">{sem.courses.length} courses</span>
                   </div>
-                  <button
-                    onClick={() => setPendingDelete(sem.label)}
-                    className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"
-                  >
+                   <button
+                     onClick={() => setPendingDelete(sem)}
+                     className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                   >
                     <X size={16} />
                   </button>
                 </div>

@@ -14,7 +14,7 @@ const Dashboard = ({ semesters, academic }) => {
 
   const calcSemesterGPA = (sem) => {
     const graded = sem.courses ? sem.courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined) : [];
-    if (graded.length === 0) return sem.gpa || 0;
+    if (graded.length === 0) return Number(sem.gpa) || 0;
     const totalCredits = graded.reduce((s, c) => s + c.credits, 0);
     if (totalCredits === 0) return 0;
     const raw = graded.reduce((s, c) => s + gradeMap[c.grade] * c.credits, 0) / totalCredits;
@@ -28,17 +28,26 @@ const Dashboard = ({ semesters, academic }) => {
 
   const totalCourses = semesters.reduce((sum, sem) => sum + (sem.courses ? sem.courses.length : 0), 0);
 
-  const completedSemesters = semesters.filter((sem) =>
-    sem.courses && sem.courses.every((c) => c.status === "done")
-  );
+   const calcCumulativeGPA = () => {
+     let totalQualityPoints = 0;
+     let totalCredits = 0;
 
-  const cumulativeGPA =
-    completedSemesters.length > 0
-      ? (
-          completedSemesters.reduce((sum, sem) => sum + calcSemesterGPA(sem), 0) /
-          completedSemesters.length
-        ).toFixed(2)
-      : "0.00";
+     for (const sem of semesters) {
+       if (!sem.courses) continue;
+       for (const c of sem.courses) {
+         if (c.grade && gradeMap[c.grade] !== undefined) {
+           totalQualityPoints += gradeMap[c.grade] * c.credits;
+           totalCredits += c.credits;
+         }
+       }
+     }
+
+     if (totalCredits === 0) return "0.00";
+     const raw = totalQualityPoints / totalCredits;
+     return scaleToMax(raw).toFixed(2);
+   };
+
+   const cumulativeGPA = calcCumulativeGPA();
 
   const lastSemester = semesters[semesters.length - 1];
   const semesterGPA = lastSemester ? calcSemesterGPA(lastSemester).toFixed(2) : "0.00";

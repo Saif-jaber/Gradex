@@ -7,7 +7,7 @@ const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C
 
 const calcSemesterGPA = (sem, maxGpa = 4.0) => {
   const graded = sem.courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined);
-  if (graded.length === 0) return sem.gpa || 0;
+  if (graded.length === 0) return Number(sem.gpa) || 0;
   const totalCredits = graded.reduce((s, c) => s + c.credits, 0);
   if (totalCredits === 0) return 0;
   const raw = graded.reduce((s, c) => s + gradeMap[c.grade] * c.credits, 0) / totalCredits;
@@ -26,7 +26,7 @@ const SemesterDisplayer = ({ semesters, maxGpa = 4.0 }) => {
     if (!query.trim()) return true;
     const q = query.toLowerCase();
     if (sem.label.toLowerCase().includes(q)) return true;
-    if (sem.gpa.toFixed(2).includes(q)) return true;
+    if (sem.gpa && sem.gpa.toFixed(2).includes(q)) return true;
     return sem.courses.some((c) =>
       c.name.toLowerCase().includes(q) ||
       c.credits.toString().includes(q) ||

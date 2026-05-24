@@ -2,11 +2,11 @@ import { useEffect } from "react";
 import { CheckCircle2, X } from "lucide-react";
 
 const SuccessPopup = ({ isOpen, onClose, message, className = "" }) => {
-  useEffect(() => {
-    if (!isOpen) return;
-    const timer = setTimeout(onClose, 4000);
-    return () => clearTimeout(timer);
-  }, [isOpen, onClose]);
+   useEffect(() => {
+     if (!isOpen) return;
+     const timer = setTimeout(onClose, 2000);
+     return () => clearTimeout(timer);
+   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

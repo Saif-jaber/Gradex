@@ -1,3 +1,5 @@
+import pool from '../config/db.js';
+
 export const checkSemesterOwnership = async (req, res, next) => {
   try {
     const userId = req.user.id;

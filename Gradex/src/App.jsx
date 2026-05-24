@@ -11,6 +11,9 @@ import DeleteCoursePopup from "./components/Deletecoursepopup";
 import UpdateCourseStatusPopup from "./components/UpdateCourseStatusPopup";
 import UpdateCourseGradePopup from "./components/UpdateCourseGradePopup";
 import SuccessPopup from "./components/SuccessPopup";
+import { deleteCourse } from "./services/courseSrv";
+import { deleteSemester, getSemesters } from "./services/semSrv";
+import { useToast } from "./context/ToastContext";
 
 const Semesters = () => (
   <h1 className="text-white text-3xl">Semesters</h1>
@@ -52,12 +55,56 @@ const App = () => {
   });
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { addToast } = useToast();
+
+   const transformDbSemester = (dbSem) => {
+     console.log("Transforming DB semester:", JSON.stringify(dbSem, null, 2));
+     return {
+       ...dbSem,
+       label: dbSem.name,
+       courses: Array.isArray(dbSem.courses) ? dbSem.courses : [],
+     };
+   };
+
+   const loadSemestersFromDb = async () => {
+     console.log("=== loadSemestersFromDb CALLED ===");
+     try {
+       const data = await getSemesters();
+       console.log("Raw data from DB:", JSON.stringify(data, null, 2));
+       
+       const transformed = Array.isArray(data) ? data.map(transformDbSemester) : [];
+       console.log("Transformed semesters:", transformed);
+       
+       if (transformed.length > 0) {
+         console.log("First semester keys:", Object.keys(transformed[0]));
+         console.log("First semester id:", transformed[0].id);
+         if (transformed[0].courses && transformed[0].courses.length > 0) {
+           console.log("First course keys:", Object.keys(transformed[0].courses[0]));
+           console.log("First course id:", transformed[0].courses[0].id);
+         }
+       }
+       
+       setSemesters(transformed);
+       console.log("Semesters state updated with", transformed.length, "semesters");
+     } catch (err) {
+       console.error("Failed to load semesters:", err);
+       console.error("Error message:", err.message);
+     }
+   };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
     if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        loadSemestersFromDb();
+      } catch (err) {
+        console.error("Failed to restore session:", err);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 
@@ -69,13 +116,13 @@ const App = () => {
     navigate("/");
   };
 
-  const handleAddSemester = (newSem) => {
-    setSemesters((prev) => [...prev, newSem]);
-    setShowSemesterSuccess(true);
-    setTimeout(() => setShowSemesterSuccess(false), 4000);
-  };
+   const handleAddSemester = (newSem) => {
+     setSemesters((prev) => [...prev, newSem]);
+     setShowSemesterSuccess(true);
+     setTimeout(() => setShowSemesterSuccess(false), 2000);
+   };
 
-  const handleAddCourse = ({ semester, courses: newCourses }) => {
+  const handleAddCourse = ({ semester, course: newCourse }) => {
     const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
 
     const recalcGPA = (courses) => {
@@ -89,42 +136,87 @@ const App = () => {
     setSemesters((prev) => {
       const exists = prev.find((s) => s.label === semester);
       if (exists) {
-        const updated = { ...exists, courses: [...exists.courses, ...newCourses] };
+        const updated = { ...exists, courses: [...exists.courses, newCourse] };
         updated.gpa = recalcGPA(updated.courses);
         return prev.map((s) => s.label === semester ? updated : s);
       }
-      return [...prev, { label: semester, gpa: 0.0, courses: newCourses }];
+      return [...prev, { label: semester, gpa: 0.0, courses: [newCourse] }];
     });
-    setShowCourseSuccess(true);
-    setTimeout(() => setShowCourseSuccess(false), 4000);
-  };
+     setShowCourseSuccess(true);
+     setTimeout(() => setShowCourseSuccess(false), 2000);
+   };
 
-  const handleDeleteSemester = (label) => {
-    setSemesters((prev) => prev.filter((s) => s.label !== label));
-  };
+   const handleDeleteSemester = async ({ label, id }) => {
+     console.log("Delete semester called:", { label, id });
 
-  const handleDeleteCourse = (semesterLabel, courseName) => {
-    const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
+     if (!id) {
+       addToast("Cannot delete: semester has no ID", "error");
+       return;
+     }
 
-    const recalcGPA = (courses) => {
-      const graded = courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined);
-      if (graded.length === 0) return 0;
-      const totalCredits = graded.reduce((s, c) => s + c.credits, 0);
-      if (totalCredits === 0) return 0;
-      return parseFloat((graded.reduce((s, c) => s + gradeMap[c.grade] * c.credits, 0) / totalCredits).toFixed(2));
-    };
+     try {
+       console.log("Calling deleteSemester API with id:", id);
+       const result = await deleteSemester(id);
+       console.log("Delete semester API result:", result);
+       setSemesters((prev) => {
+         const updated = prev.filter((s) => s.label !== label);
+         console.log("Semesters after filter:", updated.length, "remaining");
+         return updated;
+       });
+       addToast("Semester deleted successfully", "success");
+     } catch (err) {
+       console.error("Delete semester API error:", err);
+       addToast("Failed to delete semester: " + (err.message || "Server error"), "error");
+     }
+   };
 
-    setSemesters((prev) =>
-      prev.map((s) => {
-        if (s.label === semesterLabel) {
-          const updated = { ...s, courses: s.courses.filter((c) => c.name !== courseName) };
-          updated.gpa = recalcGPA(updated.courses);
-          return updated;
-        }
-        return s;
-      })
-    );
-  };
+   const handleDeleteCourse = async ({ semesterLabel, courseName, courseId }) => {
+     console.log("Delete course called:", { semesterLabel, courseName, courseId });
+
+     if (!courseId) {
+       addToast("Cannot delete: course has no ID", "error");
+       return;
+     }
+
+     try {
+       console.log("Calling deleteCourse API with id:", courseId);
+       const result = await deleteCourse(courseId);
+       console.log("Delete course API result:", result);
+
+       const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
+
+       const recalcGPA = (courses) => {
+         const graded = courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined);
+         if (graded.length === 0) return 0;
+         const totalCredits = graded.reduce((s, c) => s + c.credits, 0);
+         if (totalCredits === 0) return 0;
+         return parseFloat((graded.reduce((s, c) => s + gradeMap[c.grade] * c.credits, 0) / totalCredits).toFixed(2));
+       };
+
+       setSemesters((prev) =>
+         prev.map((s) => {
+           if (s.label === semesterLabel) {
+             console.log("Found semester, current courses:", s.courses.length);
+             const updatedCourses = s.courses.filter((c) => c.id !== courseId);
+             console.log("Courses after filter:", updatedCourses.length);
+
+             const updated = {
+               ...s,
+               courses: updatedCourses
+             };
+             updated.gpa = recalcGPA(updated.courses);
+             console.log("Updated semester gpa:", updated.gpa);
+             return updated;
+           }
+           return s;
+         })
+       );
+       addToast("Course deleted successfully", "success");
+     } catch (err) {
+       console.error("Delete course API error:", err);
+       addToast("Failed to delete course: " + (err.message || "Server error"), "error");
+     }
+   };
 
   const handleUpdateCourseStatus = (semesterLabel, courseName, newStatus) => {
     setSemesters((prev) =>
@@ -215,7 +307,7 @@ const App = () => {
       <Route path="/courses" element={<Courses />} />
       <Route path="/add-semester" element={<AddSemester />} />
       <Route path="/add-course" element={<AddCourse />} />
-      <Route path="/settings" element={
+        <Route path="/settings" element={
         user ? (
           <div className="flex h-screen w-full bg-[#111111]">
                  <Sidebar
@@ -298,7 +390,7 @@ const App = () => {
     <SuccessPopup
       isOpen={showCourseSuccess}
       onClose={() => setShowCourseSuccess(false)}
-      message="Courses added successfully!"
+      message="Course added successfully!"
       className="w-full max-w-lg"
     />
     <SuccessPopup

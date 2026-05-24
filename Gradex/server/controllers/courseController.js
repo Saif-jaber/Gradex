@@ -1,18 +1,14 @@
 import pool from '../config/db.js';
-import format from 'pg-format';
 
-// add course
 export const addCourse = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { semester_id, courses } = req.body;
+    const { semester_id, name, code, credits, status, grade } = req.body;
 
-    // 1. Validate input
-    if (!semester_id || courses.length === 0) {
+    if (!semester_id || !name) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // 2. Check ownership 
     const semCheck = await pool.query(
       `SELECT * FROM semesters WHERE id = $1 AND user_id = $2`,
       [semester_id, userId]
@@ -22,22 +18,14 @@ export const addCourse = async (req, res) => {
       return res.status(403).json({ error: "Not authorized to add course to this semester" });
     }
 
-    // 3. convert the array to a mapped array of arrays
-    const coursesVal = courses.map(course => [  // each item is called (course)
-      semester_id,
-      course.name,
-      course.credits,
-      course.status,
-      course.grade,
-    ]);
-
-    const query = format(
-      'INSERT INTO courses (semester_id, name, credits, status, grade) VALUES %L RETURNING *', 
-      coursesVal
+    const result = await pool.query(
+      `INSERT INTO courses (semester_id, name, code, credits, status, grade) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING *`,
+      [semester_id, name, code || null, credits, status, grade]
     );
 
-    const result = await pool.query(query);
-    res.status(201).json(result.rows);
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error("=== ADD COURSE ERROR ===");
     console.error("Message:", err.message);
@@ -48,6 +36,10 @@ export const addCourse = async (req, res) => {
 
 export const deleteCourse = async (req, res) => {
   try {
+    console.log("=== DELETE COURSE CONTROLLER CALLED ===");
+    console.log("User ID:", req.user?.id);
+    console.log("Course ID param:", req.params.id);
+    
     const userId = req.user.id;
     const { id } = req.params;
 
@@ -61,13 +53,17 @@ export const deleteCourse = async (req, res) => {
       [id, userId]
     );
 
+    console.log("DELETE course result:", result.rows.length, "rows deleted");
+
     if (result.rows.length === 0) {
+      console.log("Forbidden: course not found or not owned by user");
       return res.status(403).json({ error: "Not authorized to delete this course" });
     }
 
-    res.json({ message: "Course deleted successfully" });
+    res.json({ message: "Course deleted successfully", deleted: result.rows[0] });
 
   } catch (err) {
+    console.error("=== DELETE COURSE ERROR ===");
     console.error(err);
     res.status(500).json({ error: "Failed to delete course" });
   }

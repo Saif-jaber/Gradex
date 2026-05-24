@@ -17,9 +17,33 @@ export const addCourse = async (data) => {
   return JSON.parse(text);
 };
 
-// for later
-export const deleteCourse = async (data) => {
+export const deleteCourse = async (courseId) => {
+  const res = await fetch(`${API}/courses/${courseId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 };
 
-export const updateCourseStatus = async (data) => {
+export const updateCourseStatus = async (courseId, status, grade = null) => {
+  const res = await fetch(`${API}/courses/updateStatus/${courseId}`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ status, grade }),
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(text);
+  }
 };
