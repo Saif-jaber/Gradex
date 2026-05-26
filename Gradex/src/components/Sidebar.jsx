@@ -76,13 +76,6 @@ const NAV_ITEMS = [
     section: null,
   },
   {
-    id: "update-grade",
-    popup: "updateCourseGrade",
-    icon: <RefreshCw size={18} />,
-    label: "Update Course Grade",
-    section: null,
-  },
-  {
     id: "settings",
     path: "/settings",
     icon: <Settings size={18} />,
@@ -185,7 +178,7 @@ const LogoutButton = ({ collapsed, onLogout, user }) => {
   );
 };
 
-const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, onOpenDeleteSemester, onOpenDeleteCourse, onOpenUpdateCourseStatus, onOpenUpdateCourseGrade, onLogout, user }) => {
+const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, onOpenDeleteSemester, onOpenDeleteCourse, onOpenUpdateCourseStatus, onLogout, user }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [flashId, setFlashId] = useState(null);
   const navigate = useNavigate();
@@ -197,7 +190,6 @@ const Sidebar = ({ collapsed, setCollapsed, onOpenAddSemester, onOpenAddCourse, 
     deleteSemester: onOpenDeleteSemester,
     deleteCourse: onOpenDeleteCourse,
     updateCourseStatus: onOpenUpdateCourseStatus,
-    updateCourseGrade: onOpenUpdateCourseGrade,
   };
 
   const handleNavClick = (path) => {

@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { X, Search, AlertTriangle, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Search, RefreshCw } from "lucide-react";
 
 const BRAND_RED = "#f23131";
 const STATUSES = ["taking", "dropped", "completed", "failed"];
+const GRADES = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"];
 
 const UpdateCourseStatusPopup = ({ isOpen, onClose, semesters, onUpdate }) => {
   const [query, setQuery] = useState("");
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [newGrade, setNewGrade] = useState("A");
 
   const allCourses = semesters.flatMap((sem) =>
     sem.courses.map((c) => ({ ...c, semester: sem.label, currentStatus: c.status || "taking" }))
@@ -18,11 +20,31 @@ const UpdateCourseStatusPopup = ({ isOpen, onClose, semesters, onUpdate }) => {
     c.semester.toLowerCase().includes(query.toLowerCase())
   );
 
+  useEffect(() => {
+    if (selectedStatus === "failed") {
+      setNewGrade("F");
+    } else if (selectedStatus === "completed") {
+      setNewGrade(selectedCourse?.grade || "A");
+    }
+  }, [selectedStatus]);
+
   const handleUpdate = () => {
     if (!selectedCourse || !selectedStatus) return;
-    onUpdate(selectedCourse.semester, selectedCourse.name, selectedStatus);
+    const grade =
+      selectedStatus === "failed" ? "F" :
+      selectedStatus === "completed" ? newGrade :
+      null;
+    onUpdate({
+      courseId: selectedCourse.id,
+      semester: selectedCourse.semester,
+      courseName: selectedCourse.name,
+      status: selectedStatus,
+      grade,
+    });
     setSelectedCourse(null);
     setSelectedStatus("");
+    setNewGrade("A");
+    setQuery("");
     onClose();
   };
 
@@ -88,6 +110,24 @@ const UpdateCourseStatusPopup = ({ isOpen, onClose, semesters, onUpdate }) => {
               ))}
             </div>
 
+            {(selectedStatus === "completed" || selectedStatus === "failed") && (
+              <div className="space-y-1.5">
+                <label className="text-xs text-gray-400 font-medium">
+                  {selectedStatus === "failed" ? "Grade (auto-set to F)" : "Grade"}
+                </label>
+                <select
+                  value={newGrade}
+                  onChange={(e) => setNewGrade(e.target.value)}
+                  disabled={selectedStatus === "failed"}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors disabled:opacity-50"
+                >
+                  {GRADES.map((g) => (
+                    <option key={g} value={g} className="bg-[#1a1a1a]">{g}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="flex gap-2 pt-2">
               <button
                 onClick={handleUpdate}
@@ -98,7 +138,7 @@ const UpdateCourseStatusPopup = ({ isOpen, onClose, semesters, onUpdate }) => {
                 Update Status
               </button>
               <button
-                onClick={() => { setSelectedCourse(null); setSelectedStatus(""); }}
+                onClick={() => { setSelectedCourse(null); setSelectedStatus(""); setNewGrade("A"); }}
                 className="flex-1 py-2.5 rounded-xl bg-white/10 text-sm text-gray-300 hover:bg-white/15 transition-colors"
               >
                 Cancel

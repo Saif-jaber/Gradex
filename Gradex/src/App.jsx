@@ -9,9 +9,8 @@ import AddCoursePopup from "./components/Addcoursepopup";
 import DeleteSemesterPopup from "./components/Deletesemesterpopup";
 import DeleteCoursePopup from "./components/Deletecoursepopup";
 import UpdateCourseStatusPopup from "./components/UpdateCourseStatusPopup";
-import UpdateCourseGradePopup from "./components/UpdateCourseGradePopup";
 import SuccessPopup from "./components/SuccessPopup";
-import { deleteCourse } from "./services/courseSrv";
+import { deleteCourse, updateCourseStatus } from "./services/courseSrv";
 import { deleteSemester, getSemesters } from "./services/semSrv";
 import { useToast } from "./context/ToastContext";
 
@@ -38,7 +37,6 @@ const App = () => {
   const [showDeleteSemester, setShowDeleteSemester] = useState(false);
   const [showDeleteCourse, setShowDeleteCourse] = useState(false);
   const [showUpdateCourseStatus, setShowUpdateCourseStatus] = useState(false);
-  const [showUpdateCourseGrade, setShowUpdateCourseGrade] = useState(false);
   const [showCourseSuccess, setShowCourseSuccess] = useState(false);
   const [showSemesterSuccess, setShowSemesterSuccess] = useState(false);
   const [semesters, setSemesters] = useState([]);
@@ -218,50 +216,42 @@ const App = () => {
      }
    };
 
-  const handleUpdateCourseStatus = (semesterLabel, courseName, newStatus) => {
-    setSemesters((prev) =>
-      prev.map((s) => {
-        if (s.label === semesterLabel) {
-          return {
-            ...s,
-            courses: s.courses.map((c) =>
-              c.name === courseName ? { ...c, status: newStatus } : c
-            ),
-          };
-        }
-        return s;
-      })
-    );
-  };
-
-  const handleUpdateCourseGrade = ({ semester, courseName, grade, status }) => {
+  const handleUpdateCourseStatus = async ({ courseId, semester, courseName, status, grade }) => {
     const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
 
-    setSemesters((prev) =>
-      prev.map((s) => {
-        if (s.label === semester) {
-          const updated = {
-            ...s,
-            courses: s.courses.map((c) =>
-              c.name === courseName ? { ...c, grade, status } : c
-            ),
-          };
-          const graded = updated.courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined);
-          if (graded.length === 0) {
-            updated.gpa = 0;
-          } else {
-            const totalCredits = graded.reduce((sum, c) => sum + c.credits, 0);
-            if (totalCredits > 0) {
-              updated.gpa = parseFloat(
-                (graded.reduce((sum, c) => sum + gradeMap[c.grade] * c.credits, 0) / totalCredits).toFixed(2)
-              );
+    try {
+      await updateCourseStatus(courseId, status, grade);
+
+      setSemesters((prev) =>
+        prev.map((s) => {
+          if (s.label === semester) {
+            const updated = {
+              ...s,
+              courses: s.courses.map((c) =>
+                c.name === courseName ? { ...c, status, grade } : c
+              ),
+            };
+            const graded = updated.courses.filter((c) => c.grade && gradeMap[c.grade] !== undefined);
+            if (graded.length === 0) {
+              updated.gpa = 0;
+            } else {
+              const totalCredits = graded.reduce((sum, c) => sum + c.credits, 0);
+              if (totalCredits > 0) {
+                updated.gpa = parseFloat(
+                  (graded.reduce((sum, c) => sum + gradeMap[c.grade] * c.credits, 0) / totalCredits).toFixed(2)
+                );
+              }
             }
+            return updated;
           }
-          return updated;
-        }
-        return s;
-      })
-    );
+          return s;
+        })
+      );
+      addToast("Course status updated successfully", "success");
+    } catch (err) {
+      console.error("Update course status error:", err);
+      addToast("Failed to update course status: " + (err.message || "Server error"), "error");
+    }
   };
 
   return (
@@ -279,7 +269,6 @@ const App = () => {
                 onOpenDeleteSemester={() => setShowDeleteSemester(true)}
                 onOpenDeleteCourse={() => setShowDeleteCourse(true)}
                 onOpenUpdateCourseStatus={() => setShowUpdateCourseStatus(true)}
-                onOpenUpdateCourseGrade={() => setShowUpdateCourseGrade(true)}
                 onLogout={handleLogout}
                 user={user}
               />
@@ -318,7 +307,6 @@ const App = () => {
                  onOpenDeleteSemester={() => setShowDeleteSemester(true)}
                  onOpenDeleteCourse={() => setShowDeleteCourse(true)}
                  onOpenUpdateCourseStatus={() => setShowUpdateCourseStatus(true)}
-                 onOpenUpdateCourseGrade={() => setShowUpdateCourseGrade(true)}
                  onLogout={handleLogout}
                  user={user}
                />
@@ -378,13 +366,6 @@ const App = () => {
       onClose={() => setShowUpdateCourseStatus(false)}
       semesters={semesters}
       onUpdate={handleUpdateCourseStatus}
-    />
-
-    <UpdateCourseGradePopup
-      isOpen={showUpdateCourseGrade}
-      onClose={() => setShowUpdateCourseGrade(false)}
-      semesters={semesters}
-      onUpdate={handleUpdateCourseGrade}
     />
 
     <SuccessPopup

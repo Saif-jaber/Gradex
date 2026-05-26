@@ -95,7 +95,7 @@ export const updateCourseStatus = async (req, res) => {
        RETURNING c.*`,
       [
         status,
-        status === "completed" ? grade : null, // only keep grade if completed
+        status === "completed" || status === "failed" ? grade : null,
         id,
         userId
       ]
