@@ -2,13 +2,13 @@ import StatCard from "../components/Statcard.jsx";
 import GpaBarChart from "../components/Gpabarchart.jsx";
 import GpaGauge from "../components/Gpagauge.jsx";
 import SemesterDisplayer from "../components/Semesterdisplayer.jsx";
-import DroppedFailedCourses from "../components/DroppedFailedCourses";
+import DroppedFailedCourses from "../components/DroppedFailedCourses.jsx";
 
 const gradeMap = { A: 4.0, "A-": 3.7, "B+": 3.3, B: 3.0, "B-": 2.7, "C+": 2.3, C: 2.0, "C-": 1.7, D: 1.0, F: 0.0 };
 
 const Dashboard = ({ semesters, academic }) => {
-  const maxGPA = academic?.maxGPA || 4.0;
-  const graduationCredits = academic?.graduationCredits || 120;
+  const maxGPA = Number(academic?.maxGPA) || 4.0;
+  const graduationCredits = Number(academic?.graduationCredits) || 120;
 
   const scaleToMax = (val) => (val / 4.0) * maxGPA;
 

@@ -15,7 +15,7 @@ export const signup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10); // hash password
         //  add the new user
-        const newUser = await pool.query("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email", [name, email, hashedPassword])
+        const newUser = await pool.query("INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, university, major", [name, email, hashedPassword])
 
         const token = jwt.sign(
           { id: newUser.rows[0].id },
@@ -67,7 +67,9 @@ export const login = async (req, res) =>{
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        university: user.university,
+        major: user.major
       }
     });
 

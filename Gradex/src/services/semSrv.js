@@ -55,6 +55,21 @@ export const getSemesterId = async (name) => {
      }
  }
 
+export const deleteAllSemesters = async () => {
+  const res = await fetch(`${API}/semesters/clear-all`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+};
+
 export const deleteSemester = async (semesterId) => {
   const res = await fetch(`${API}/semesters/${semesterId}`, {
     method: 'DELETE',

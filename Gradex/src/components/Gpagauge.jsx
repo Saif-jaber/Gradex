@@ -17,12 +17,15 @@ const GpaGauge = ({
   maxGpa = 4.0,
   degreeProgress = 72,
 }) => {
+  const safeMaxGpa = Number(maxGpa) || 4.0;
+  const safeGpa = Number(gpa) || 0;
+  const safeProgress = Number(degreeProgress) || 0;
   const cx = 110;
   const cy = 110;
   const r = 78;
   const startAngle = -90;
   const endAngle = 90;
-  const fillAngle = startAngle + (gpa / maxGpa) * (endAngle - startAngle);
+  const fillAngle = startAngle + (safeGpa / safeMaxGpa) * (endAngle - startAngle);
 
   const trackPath = describeArc(cx, cy, r, startAngle, endAngle);
   const fillPath = describeArc(cx, cy, r, startAngle, fillAngle);
@@ -44,7 +47,7 @@ const GpaGauge = ({
           width="220"
           height="145"
           viewBox="0 0 220 155"
-          aria-label={`GPA gauge showing ${gpa} out of ${maxGpa}`}
+          aria-label={`GPA gauge showing ${safeGpa} out of ${safeMaxGpa}`}
         >
           {/* Track arc */}
           <path
@@ -81,7 +84,7 @@ const GpaGauge = ({
             fill={BRAND_RED}
             fontFamily="inherit"
           >
-            {gpa.toFixed(2)}
+            {safeGpa.toFixed(2)}
           </text>
           {/* Sub label */}
           <text
@@ -92,7 +95,7 @@ const GpaGauge = ({
             fill="#6b7280"
             fontFamily="inherit"
           >
-            out of {maxGpa.toFixed(1)}
+            out of {safeMaxGpa.toFixed(1)}
           </text>
         </svg>
       </div>
@@ -112,7 +115,7 @@ const GpaGauge = ({
         className="flex justify-around pt-4 mt-1"
       >
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-xl font-semibold text-white">{degreeProgress}%</span>
+          <span className="text-xl font-semibold text-white">{safeProgress}%</span>
           <span className="text-[11px] text-gray-500">Degree progress</span>
         </div>
       </div>

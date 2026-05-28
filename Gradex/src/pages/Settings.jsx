@@ -10,6 +10,9 @@ import {
   Settings as SettingsIcon,
   ChevronDown,
   ChevronUp,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 
 const BRAND_RED = "#f23131";
@@ -42,8 +45,28 @@ const Section = ({ icon, title, description, children, defaultOpen = true }) => 
   );
 };
 
-const SettingsPage = ({ semesters, setSemesters, academic, setAcademic, profile, setProfile }) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+const SettingsPage = ({ semesters, setSemesters, academic, setAcademic, profile, setProfile, onOpenClearData, onSaveAcademic }) => {
+  const [editingField, setEditingField] = useState(null);
+  const [editValue, setEditValue] = useState("");
+
+  const startEdit = (field, currentValue) => {
+    setEditingField(field);
+    setEditValue(String(currentValue));
+  };
+
+  const cancelEdit = () => {
+    setEditingField(null);
+    setEditValue("");
+  };
+
+  const saveEdit = (field) => {
+    const numValue = Number(editValue);
+    if (isNaN(numValue)) return;
+    setAcademic({ ...a, [field]: numValue });
+    onSaveAcademic(field, numValue);
+    setEditingField(null);
+    setEditValue("");
+  };
 
   const handleExport = () => {
     const data = {
@@ -76,11 +99,6 @@ const SettingsPage = ({ semesters, setSemesters, academic, setAcademic, profile,
       }
     };
     reader.readAsText(file);
-  };
-
-  const handleClearData = () => {
-    setSemesters([]);
-    setShowDeleteConfirm(false);
   };
 
   const handleReset = () => {
@@ -142,52 +160,64 @@ const SettingsPage = ({ semesters, setSemesters, academic, setAcademic, profile,
           description="Configure GPA scale and graduation requirements"
         >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Max GPA</label>
-              <select
-                value={a.maxGPA}
-                onChange={(e) => setAcademic({ ...a, maxGPA: Number(e.target.value) })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
-              >
-                <option value={4.0} className="bg-[#1a1a1a]">4.0</option>
-                <option value={5.0} className="bg-[#1a1a1a]">5.0</option>
-                <option value={10.0} className="bg-[#1a1a1a]">10.0</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Semesters / Year</label>
-              <select
-                value={a.semestersPerYear}
-                onChange={(e) => setAcademic({ ...a, semestersPerYear: Number(e.target.value) })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
-              >
-                {[2, 3, 4].map((n) => (
-                  <option key={n} value={n} className="bg-[#1a1a1a]">{n}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Graduation Credits</label>
-              <input
-                type="number"
-                min="60"
-                max="200"
-                value={a.graduationCredits}
-                onChange={(e) => setAcademic({ ...a, graduationCredits: Number(e.target.value) })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs text-gray-400 font-medium">Default Credits</label>
-              <input
-                type="number"
-                min="1"
-                max="6"
-                value={a.defaultCredits}
-                onChange={(e) => setAcademic({ ...a, defaultCredits: Number(e.target.value) })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5 outline-none focus:border-red-500/50 transition-colors"
-              />
-            </div>
+            {[
+              { key: "maxGPA", label: "Max GPA", type: "select", options: [4.0, 5.0, 10.0] },
+              { key: "semestersPerYear", label: "Semesters / Year", type: "select", options: [2, 3, 4] },
+              { key: "graduationCredits", label: "Graduation Credits", type: "number", min: 60, max: 200 },
+              { key: "defaultCredits", label: "Default Credits", type: "number", min: 1, max: 6 },
+            ].map((field) => (
+              <div key={field.key} className="space-y-1.5">
+                <label className="text-xs text-gray-400 font-medium">{field.label}</label>
+                {editingField === field.key ? (
+                  <div className="flex items-center gap-1">
+                    {field.type === "select" ? (
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 bg-white/5 border border-white/10 rounded-lg text-sm text-white px-2 py-2.5 outline-none focus:border-red-500/50 transition-colors"
+                      >
+                        {field.options.map((opt) => (
+                          <option key={opt} value={opt} className="bg-[#1a1a1a]">{opt}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="number"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        min={field.min}
+                        max={field.max}
+                        className="flex-1 bg-white/5 border border-white/10 rounded-lg text-sm text-white px-2 py-2.5 outline-none focus:border-red-500/50 transition-colors"
+                      />
+                    )}
+                    <button
+                      onClick={() => saveEdit(field.key)}
+                      className="p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="p-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/15 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 bg-white/5 border border-white/10 rounded-lg text-sm text-white px-3 py-2.5">
+                      {String(a[field.key] ?? "")}
+                    </div>
+                    <button
+                      onClick={() => startEdit(field.key, a[field.key] ?? "")}
+                      className="p-2 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-white/10 transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </Section>
 
@@ -220,31 +250,13 @@ const SettingsPage = ({ semesters, setSemesters, academic, setAcademic, profile,
               Reset All
             </button>
 
-            {!showDeleteConfirm ? (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 hover:bg-red-500/20 transition-colors"
-              >
-                <Trash2 size={14} />
-                Clear Data
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-red-400">Are you sure?</span>
-                <button
-                  onClick={handleClearData}
-                  className="px-3 py-1.5 rounded-lg bg-red-500 text-xs font-semibold text-white hover:bg-red-600 transition-colors"
-                >
-                  Yes, clear
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1.5 rounded-lg bg-white/10 text-xs text-gray-300 hover:bg-white/15 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+            <button
+              onClick={onOpenClearData}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 hover:bg-red-500/20 transition-colors"
+            >
+              <Trash2 size={14} />
+              Clear Data
+            </button>
           </div>
         </Section>
 

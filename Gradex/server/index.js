@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import coursesRoutes from './routes/courses.js';
 import semestersRoutes from './routes/semesters.js';
+import settingsRoutes from './routes/settings.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,5 +28,8 @@ app.use('/courses', coursesRoutes);
 
 // semesters routes
 app.use('/semesters', semestersRoutes);
+
+// settings routes
+app.use('/settings', settingsRoutes);
 
 app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`));

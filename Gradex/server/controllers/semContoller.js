@@ -32,6 +32,11 @@ export const deleteSemester = async (req, res) => {
     console.log("User ID:", req.user?.id);
     console.log("Semester ID param:", req.params.id);
     
+    // Safety check: prevent "all" or "clear-all" from being treated as an ID
+    if (req.params.id === "all" || req.params.id === "clear-all") {
+      return res.status(400).json({ error: "Use the clear-all endpoint to bulk delete" });
+    }
+    
     const userId = req.user.id;
     const { id } = req.params;
 
@@ -135,6 +140,30 @@ export const getSemesterIdByName = async (req, res) => {
             message: 'Server error'
         });
     }
+};
+
+export const deleteAllSemesters = async (req, res) => {
+  console.log("=== DELETE ALL SEMESTERS CONTROLLER CALLED ===");
+  console.log("User ID:", req.user?.id);
+  try {
+    const userId = req.user.id;
+
+    const result = await pool.query(
+      `DELETE FROM semesters WHERE user_id = $1 RETURNING *`,
+      [userId]
+    );
+
+    console.log("Deleted", result.rowCount, "semesters");
+
+    res.json({
+      message: "All data cleared successfully",
+      deleted: result.rowCount
+    });
+  } catch (error) {
+    console.error("=== DELETE ALL SEMESTERS ERROR ===");
+    console.error(error);
+    res.status(500).json({ error: "Failed to clear data" });
+  }
 };
 
 // check if semester exists

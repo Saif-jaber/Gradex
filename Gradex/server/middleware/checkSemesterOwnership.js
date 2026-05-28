@@ -5,6 +5,11 @@ export const checkSemesterOwnership = async (req, res, next) => {
     const userId = req.user.id;
     const semesterId = req.params.id || req.body.semester_id;
 
+    // Safety check: reject non-numeric IDs
+    if (semesterId && isNaN(Number(semesterId))) {
+      return res.status(400).json({ error: "Invalid semester ID" });
+    }
+
     const result = await pool.query(
       "SELECT * FROM semesters WHERE id = $1 AND user_id = $2",
       [semesterId, userId]

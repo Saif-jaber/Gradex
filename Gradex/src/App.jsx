@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
@@ -10,8 +10,11 @@ import DeleteSemesterPopup from "./components/Deletesemesterpopup";
 import DeleteCoursePopup from "./components/Deletecoursepopup";
 import UpdateCourseStatusPopup from "./components/UpdateCourseStatusPopup";
 import SuccessPopup from "./components/SuccessPopup";
+import ClearDataPopup from "./components/ClearDataPopup";
+import SetupPopup from "./components/SetupPopup";
 import { deleteCourse, updateCourseStatus } from "./services/courseSrv";
-import { deleteSemester, getSemesters } from "./services/semSrv";
+import { deleteSemester, getSemesters, deleteAllSemesters } from "./services/semSrv";
+import { getSettings, updateSettings } from "./services/settingsSrv";
 import { useToast } from "./context/ToastContext";
 
 const Semesters = () => (
@@ -39,6 +42,9 @@ const App = () => {
   const [showUpdateCourseStatus, setShowUpdateCourseStatus] = useState(false);
   const [showCourseSuccess, setShowCourseSuccess] = useState(false);
   const [showSemesterSuccess, setShowSemesterSuccess] = useState(false);
+  const [showClearData, setShowClearData] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
   const [semesters, setSemesters] = useState([]);
   const [academic, setAcademic] = useState({
     maxGPA: 4.0,
@@ -53,7 +59,15 @@ const App = () => {
   });
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToast } = useToast();
+
+  // Show setup popup only when arriving at dashboard and needs setup
+  useEffect(() => {
+    if (needsSetup && location.pathname === "/dashboard") {
+      setShowSetup(true);
+    }
+  }, [needsSetup, location.pathname]);
 
    const transformDbSemester = (dbSem) => {
      console.log("Transforming DB semester:", JSON.stringify(dbSem, null, 2));
@@ -97,6 +111,31 @@ const App = () => {
       try {
         const userData = JSON.parse(storedUser);
         setUser(userData);
+
+        // Load settings from DB
+        getSettings().then((settings) => {
+          if (settings.university) userData.university = settings.university;
+          if (settings.major) userData.major = settings.major;
+          localStorage.setItem("user", JSON.stringify(userData));
+          setAcademic({
+            maxGPA: settings.maxGpa ?? 4.0,
+            semestersPerYear: settings.semestersPerYear ?? 3,
+            graduationCredits: settings.graduationCredits ?? 120,
+            defaultCredits: settings.defaultCredits ?? 3,
+          });
+          setProfile((prev) => ({
+            ...prev,
+            name: userData.name || "",
+            university: settings.university || "",
+            major: settings.major || "",
+          }));
+          if (!settings.university && !settings.major) {
+            setNeedsSetup(true);
+          }
+        }).catch((err) => {
+          console.error("Failed to load settings:", err);
+        });
+
         loadSemestersFromDb();
       } catch (err) {
         console.error("Failed to restore session:", err);
@@ -112,6 +151,54 @@ const App = () => {
     setUser(null);
     setSemesters([]);
     navigate("/");
+  };
+
+  const handleClearData = async () => {
+    try {
+      await deleteAllSemesters();
+      setSemesters([]);
+      setShowClearData(false);
+      addToast("All data cleared successfully", "success");
+    } catch (err) {
+      console.error("Clear data error:", err);
+      addToast("Failed to clear data: " + (err.message || "Server error"), "error");
+    }
+  };
+
+  const handleSetupSave = async ({ university, major }) => {
+    try {
+      await updateSettings({ university, major });
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      storedUser.university = university;
+      storedUser.major = major;
+      localStorage.setItem("user", JSON.stringify(storedUser));
+      setUser({ ...storedUser });
+      setProfile((prev) => ({ ...prev, university, major }));
+      setShowSetup(false);
+      setNeedsSetup(false);
+      addToast("Profile setup complete!", "success");
+    } catch (err) {
+      console.error("Setup save error:", err);
+      addToast("Failed to save profile: " + (err.message || "Server error"), "error");
+      throw err;
+    }
+  };
+
+  const handleAcademicSave = (field, value) => {
+    const payload = {};
+    const fieldMap = {
+      maxGPA: "maxGpa",
+      semestersPerYear: "semestersPerYear",
+      graduationCredits: "graduationCredits",
+      defaultCredits: "defaultCredits",
+    };
+    payload[fieldMap[field]] = value;
+    updateSettings(payload).then(() => {
+      addToast(`${field} updated`, "success");
+    }).catch((err) => {
+      console.error("Failed to save academic setting:", err);
+      addToast("Failed to save setting", "error");
+    });
   };
 
    const handleAddSemester = (newSem) => {
@@ -311,7 +398,7 @@ const App = () => {
                  user={user}
                />
               <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
-                <SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} />
+                <SettingsPage semesters={semesters} setSemesters={setSemesters} academic={academic} setAcademic={setAcademic} profile={profile} setProfile={setProfile} onOpenClearData={() => setShowClearData(true)} onSaveAcademic={handleAcademicSave} />
               </main>
           </div>
         ) : (
@@ -379,6 +466,18 @@ const App = () => {
       onClose={() => setShowSemesterSuccess(false)}
       message="Semester added successfully!"
       className="w-full max-w-md"
+    />
+
+    <ClearDataPopup
+      isOpen={showClearData}
+      onClose={() => setShowClearData(false)}
+      onConfirm={handleClearData}
+    />
+
+    <SetupPopup
+      isOpen={showSetup}
+      onClose={() => { setShowSetup(false); setNeedsSetup(false); }}
+      onSave={handleSetupSave}
     />
   </>
   );

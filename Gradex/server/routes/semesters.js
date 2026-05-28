@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSemester, deleteSemester, getSemesters, checkSemesterExists, getSemesterIdByName } from '../controllers/semContoller.js';
+import { createSemester, deleteSemester, getSemesters, checkSemesterExists, getSemesterIdByName, deleteAllSemesters } from '../controllers/semContoller.js';
 import { verifyToken } from "../middleware/verifyToken.js";
 import { checkSemesterOwnership } from "../middleware/checkSemesterOwnership.js";
 
@@ -19,6 +19,9 @@ router.get('/id/:name', getSemesterIdByName);
 
 // Get all semesters (with courses)
 router.get("/semList", getSemesters);
+
+// Delete all semesters for the user
+router.delete("/clear-all", deleteAllSemesters);
 
 // Delete semester (must own it)
 router.delete("/:id", checkSemesterOwnership, deleteSemester);

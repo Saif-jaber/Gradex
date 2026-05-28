@@ -11,6 +11,7 @@ const calcSemesterGPA = (sem) => {
 };
 
 const GpaBarChart = ({ semesters, maxGpa = 4.0 }) => {
+  const safeMaxGpa = Number(maxGpa) || 4.0;
   if (!semesters || semesters.length === 0) {
     return (
       <div
@@ -37,7 +38,7 @@ const GpaBarChart = ({ semesters, maxGpa = 4.0 }) => {
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
         <h2 className="text-sm font-semibold text-white">GPA by semester</h2>
-        <span className="text-[11px] text-gray-500">out of {maxGpa.toFixed(1)}</span>
+        <span className="text-[11px] text-gray-500">out of {safeMaxGpa.toFixed(1)}</span>
       </div>
 
       {/* Bars - scrollable */}
@@ -45,8 +46,8 @@ const GpaBarChart = ({ semesters, maxGpa = 4.0 }) => {
         <div className="flex flex-col gap-3.5 pr-2">
           {semesters.map((sem) => {
             const raw = calcSemesterGPA(sem);
-            const gpa = (raw / 4.0) * maxGpa;
-            const pct = (gpa / maxGpa) * 100;
+            const gpa = (raw / 4.0) * safeMaxGpa;
+            const pct = (gpa / safeMaxGpa) * 100;
             return (
               <div key={sem.label} className="flex items-center gap-3">
                 {/* Label */}
