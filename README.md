@@ -86,13 +86,56 @@ VITE_API_URL=http://localhost:5000
 
 ### 3. Set up the database
 
-Create a database named `gradex` in PostgreSQL, then restore the schema:
+Create a database named `gradex` in PostgreSQL, then run the following schema:
 
-```bash
-psql -U postgres -d gradex -f Backup/schema_backup.sql
+```sql
+CREATE TABLE users (
+    id            SERIAL PRIMARY KEY,
+    email         VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    name          VARCHAR(255) NOT NULL,
+    university    VARCHAR(255),
+    major         VARCHAR(255),
+    created_at    TIMESTAMP DEFAULT now(),
+    updated_at    TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE semesters (
+    id            SERIAL PRIMARY KEY,
+    user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    name          VARCHAR(255) NOT NULL,
+    academic_year VARCHAR(20),
+    start_date    DATE,
+    end_date      DATE,
+    gpa           NUMERIC(4,2),
+    created_at    TIMESTAMP DEFAULT now(),
+    updated_at    TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE courses (
+    id          SERIAL PRIMARY KEY,
+    semester_id INTEGER REFERENCES semesters(id) ON DELETE CASCADE,
+    name        VARCHAR(255) NOT NULL,
+    code        VARCHAR(50),
+    credits     NUMERIC(3,1) NOT NULL,
+    grade       VARCHAR(5),
+    status      VARCHAR(20) NOT NULL DEFAULT 'taking'
+                CHECK (status IN ('taking', 'dropped', 'failed', 'completed')),
+    created_at  TIMESTAMP DEFAULT now(),
+    updated_at  TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE settings (
+    id                  SERIAL PRIMARY KEY,
+    user_id             INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    max_gpa             NUMERIC(3,1) NOT NULL DEFAULT 4.0,
+    semesters_per_year  INTEGER NOT NULL DEFAULT 3,
+    graduation_credits  INTEGER NOT NULL DEFAULT 120,
+    default_credits     NUMERIC(3,1) NOT NULL DEFAULT 3.0,
+    created_at          TIMESTAMP DEFAULT now(),
+    updated_at          TIMESTAMP DEFAULT now()
+);
 ```
-
-This creates the `users`, `semesters`, `courses`, and `settings` tables.
 
 ### 4. Run the app
 
