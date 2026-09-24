@@ -1,4 +1,4 @@
-# Gradex — GPA Tracker
+# Gradex - GPA Tracker
 
 Full-stack GPA tracker built with React, Vite, Tailwind CSS, Express, and PostgreSQL.
 
